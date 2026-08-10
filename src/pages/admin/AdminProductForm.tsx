@@ -68,8 +68,6 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
 
   // Images State
   const [coverImage, setCoverImage] = useState(existingProduct?.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=800&q=80');
-  const [images, setImages] = useState<string[]>(existingProduct?.images || []);
-  const [newImageUrl, setNewImageUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
   // Variants State
@@ -122,17 +120,6 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
   };
 
   // Image Handlers
-  const handleAddImage = () => {
-    if (newImageUrl.trim()) {
-      setImages(prev => [...prev, newImageUrl.trim()]);
-      setNewImageUrl('');
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImages(prev => prev.filter((_, idx) => idx !== index));
-  };
-
   const handleCoverFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -143,26 +130,6 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
     } catch (err) {
       console.error('Error processing cover file:', err);
       alert('Görsel yüklenirken bir hata oluştu.');
-    } finally {
-      setIsUploading(false);
-      e.target.value = '';
-    }
-  };
-
-  const handleGalleryFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    try {
-      setIsUploading(true);
-      const newBase64s: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const b64 = await convertFileToBase64(files[i]);
-        newBase64s.push(b64);
-      }
-      setImages(prev => [...prev, ...newBase64s]);
-    } catch (err) {
-      console.error('Error processing gallery files:', err);
-      alert('Görseller yüklenirken bir hata oluştu.');
     } finally {
       setIsUploading(false);
       e.target.value = '';
@@ -221,7 +188,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
       featured,
       isNew,
       coverImage,
-      images: images.length > 0 ? images : [coverImage],
+      images: [coverImage].filter(Boolean),
       colors: variants.map(v => v.name),
       specifications: specifications.filter(s => s.title.trim() !== ''),
       variants,
@@ -594,13 +561,13 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
             {/* Cover Image Section */}
             <div className="space-y-3">
               <label className="block font-bold text-slate-800 text-sm">
-                Ana Kapak Görseli *
+                Ürün Görseli *
               </label>
 
               <div className="flex flex-col sm:flex-row gap-4 items-start">
                 <div className="w-36 h-28 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center relative shadow-xs">
                   {coverImage ? (
-                    <img src={coverImage} alt="Kapak Önizleme" className="w-full h-full object-cover" />
+                    <img src={coverImage} alt="Görsel Önizleme" className="w-full h-full object-cover" />
                   ) : (
                     <ImageIcon className="w-8 h-8 text-slate-300" />
                   )}
@@ -609,7 +576,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
                 <div className="flex-1 space-y-3 w-full">
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">
-                      1. Bilgisayardan Fotoğraf Yükle (Herkes Görebilir)
+                      1. Bilgisayardan Fotoğraf Yükle
                     </label>
                     <label className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl cursor-pointer shadow-xs transition-colors">
                       {isUploading ? (
@@ -647,62 +614,6 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
                     />
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Gallery Images Section */}
-            <div className="pt-5 border-t border-slate-200 space-y-3">
-              <label className="block font-bold text-slate-800 text-sm">
-                Galeri Görselleri (Çoklu Fotoğraf)
-              </label>
-
-              <div className="flex flex-col sm:flex-row gap-3 items-center">
-                <label className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl cursor-pointer shadow-xs transition-colors text-xs">
-                  <Upload className="w-4 h-4" />
-                  <span>Bilgisayardan Çoklu Fotoğraf Yükle</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleGalleryFileUpload}
-                    className="hidden"
-                    disabled={isUploading}
-                  />
-                </label>
-
-                <span className="text-slate-400 font-medium">veya</span>
-
-                <div className="flex-1 flex gap-2 w-full">
-                  <input
-                    type="text"
-                    placeholder="Görsel URL yapıştırın..."
-                    value={newImageUrl}
-                    onChange={e => setNewImageUrl(e.target.value)}
-                    className="flex-1 p-2 rounded-lg border border-slate-300"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddImage}
-                    className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg cursor-pointer"
-                  >
-                    Ekle
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                {images.map((img, idx) => (
-                  <div key={idx} className="relative group border border-slate-200 rounded-xl overflow-hidden bg-slate-50 aspect-video shadow-2xs">
-                    <img src={img} alt={`Görsel ${idx}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(idx)}
-                      className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

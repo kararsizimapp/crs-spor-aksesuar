@@ -37,7 +37,6 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
 
   // Form image states
   const [coverImage, setCoverImage] = useState<string>('');
-  const [gallery, setGallery] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -57,7 +56,6 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
   useEffect(() => {
     if (currentProduct) {
       setCoverImage(currentProduct.coverImage || '');
-      setGallery(currentProduct.gallery || []);
       setImageUrlInput('');
     }
   }, [currentId, currentProduct]);
@@ -82,27 +80,14 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
 
   // Handle local file selection
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     setIsUploading(true);
     try {
-      const newImages: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const base64 = await convertFileToBase64(files[i]);
-        newImages.push(base64);
-      }
-
-      if (!coverImage || coverImage.includes('unsplash') || coverImage.includes('placeholder')) {
-        setCoverImage(newImages[0]);
-        if (newImages.length > 1) {
-          setGallery(prev => [...prev, ...newImages.slice(1)]);
-        }
-      } else {
-        setGallery(prev => [...prev, ...newImages]);
-      }
-
-      showNotification(`${newImages.length} adet resim yüklendi.`);
+      const base64 = await convertFileToBase64(file);
+      setCoverImage(base64);
+      showNotification('Ürün resmi yüklendi.');
     } catch (err) {
       console.error('File upload error:', err);
       showNotification('Resim yüklenirken bir hata oluştu.', 'error');
@@ -117,35 +102,9 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
     const url = imageUrlInput.trim();
     if (!url) return;
 
-    if (!coverImage || coverImage.includes('unsplash') || coverImage.includes('placeholder')) {
-      setCoverImage(url);
-    } else {
-      setGallery(prev => [...prev, url]);
-    }
-
+    setCoverImage(url);
     setImageUrlInput('');
     showNotification('Resim bağlantısı eklendi.');
-  };
-
-  // Set gallery image as cover image
-  const handleMakeCover = (index: number) => {
-    const selected = gallery[index];
-    const oldCover = coverImage;
-
-    const newGallery = [...gallery];
-    newGallery.splice(index, 1);
-    if (oldCover) {
-      newGallery.push(oldCover);
-    }
-
-    setCoverImage(selected);
-    setGallery(newGallery);
-    showNotification('Kapak resmi değiştirildi.');
-  };
-
-  // Remove gallery item
-  const handleRemoveGalleryItem = (index: number) => {
-    setGallery(prev => prev.filter((_, i) => i !== index));
   };
 
   // Save changes
@@ -154,7 +113,8 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
     try {
       await updateProduct(currentProduct.id, {
         coverImage,
-        gallery,
+        images: [coverImage].filter(Boolean),
+        gallery: [],
       });
 
       showNotification(`"${currentProduct.name}" resimleri güncellendi!`);
@@ -330,7 +290,7 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
                       Bilgisayardan Resim Seç veya Sürükle
                     </span>
                     <span className="text-[10px] text-slate-500">
-                      JPG, PNG, WEBP (Birden fazla seçebilirsiniz)
+                      JPG, PNG, WEBP
                     </span>
                   </div>
                 </label>
@@ -363,52 +323,6 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Gallery Images Section */}
-          <div className="pt-4 border-t border-slate-200 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-teal-600" />
-                Ek Ürün Galerisi ({gallery.length} Adet)
-              </label>
-            </div>
-
-            {gallery.length === 0 ? (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center text-slate-500 text-xs">
-                Bu ürüne ait henüz ek galeri resmi bulunmuyor. Yukarıdaki yükleme alanından çoklu resim yükleyebilirsiniz.
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {gallery.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-2xs"
-                  >
-                    <img src={img} alt={`Galeri ${idx + 1}`} className="w-full h-full object-cover" />
-
-                    <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-between items-center text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleMakeCover(idx)}
-                        className="w-full py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[10px] rounded-md shadow-md cursor-pointer transition-colors"
-                      >
-                        Kapak Yap
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveGalleryItem(idx)}
-                        className="p-1 bg-red-600 hover:bg-red-700 text-white rounded-md cursor-pointer transition-colors"
-                        title="Resmi Sil"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 

@@ -103,7 +103,7 @@ export const ProductDetailModal: React.FC = () => {
         <div className="p-4 sm:p-5 overflow-y-auto flex-1 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
             
-            {/* LEFT COLUMN: Image & Gallery */}
+            {/* LEFT COLUMN: Main Image */}
             <div className="space-y-3">
               {/* Main Image */}
               <div className="relative bg-slate-50 border border-slate-200 rounded-xl overflow-hidden aspect-square max-h-72 w-full group flex items-center justify-center p-3">
@@ -121,25 +121,6 @@ export const ProductDetailModal: React.FC = () => {
                   <Maximize2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-
-              {/* Thumbnails Gallery */}
-              {allImages.length > 1 && (
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                  {allImages.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`w-12 h-12 rounded-lg border-2 overflow-hidden flex-shrink-0 bg-slate-50 transition-all cursor-pointer ${
-                        activeImageIndex === idx
-                          ? 'border-teal-600 ring-2 ring-teal-600/30'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <img src={img} alt={`Önizleme ${idx + 1}`} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* RIGHT COLUMN: Info, Price, Description, Variants */}
