@@ -20,8 +20,18 @@ import {
   Layers,
   ImagePlus,
   Camera,
+  Tag,
+  FolderTree,
+  DollarSign,
+  Percent,
+  FileText,
+  AlignLeft,
+  Sparkles,
+  Zap,
+  Award,
 } from 'lucide-react';
 import { AdminQuickImageUpload } from './AdminQuickImageUpload';
+import { AdminQuickEditModal, QuickEditTab } from './AdminQuickEditModal';
 
 interface AdminProductsProps {
   onAddNew: () => void;
@@ -53,6 +63,17 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
   // Quick image upload state
   const [quickUploadProductId, setQuickUploadProductId] = useState<string | null>(null);
   const [showQuickUploadModal, setShowQuickUploadModal] = useState(false);
+
+  // Quick edit modal state
+  const [quickEditProductId, setQuickEditProductId] = useState<string | null>(null);
+  const [quickEditTab, setQuickEditTab] = useState<QuickEditTab>('name_sku');
+  const [showQuickEditModal, setShowQuickEditModal] = useState(false);
+
+  const openQuickEdit = (productId: string | null, tab: QuickEditTab) => {
+    setQuickEditProductId(productId || (products[0]?.id || null));
+    setQuickEditTab(tab);
+    setShowQuickEditModal(true);
+  };
 
   const filtered = useMemo(() => {
     return products.filter(p => {
@@ -137,17 +158,6 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => {
-              setQuickUploadProductId(products[0]?.id || null);
-              setShowQuickUploadModal(true);
-            }}
-            className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer border border-amber-300"
-          >
-            <ImagePlus className="w-4 h-4 text-amber-600" />
-            Hızlı Resim Yükle
-          </button>
-
-          <button
             onClick={onAddNew}
             className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-teal-900/20 flex items-center gap-1.5 cursor-pointer"
           >
@@ -161,6 +171,123 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
           >
             <ListPlus className="w-4 h-4 text-teal-400" />
             Çoklu Ürün Ekle (Tek Menü)
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Actions Pill Toolbar (Hızlı İşlem Butonları) */}
+      <div className="bg-amber-50/60 border border-amber-200 p-4 rounded-2xl space-y-2.5 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs font-black text-amber-950 uppercase tracking-wider">
+            <Zap className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Düzenleme Menüleri & İşlemleri</span>
+          </div>
+          <span className="text-[11px] font-bold text-amber-700/80">
+            Tek tıkla tüm ürünlerinizin detaylarını hızlıca güncelleyin
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Hızlı Marka */}
+          <button
+            onClick={() => openQuickEdit(null, 'brand')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <Award className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Marka</span>
+          </button>
+
+          {/* Hızlı Resim Yükle */}
+          <button
+            onClick={() => {
+              setQuickUploadProductId(products[0]?.id || null);
+              setShowQuickUploadModal(true);
+            }}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <ImagePlus className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Resim Yükle</span>
+          </button>
+
+          {/* Hızlı Ürün Adı */}
+          <button
+            onClick={() => openQuickEdit(null, 'name_sku')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <Tag className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Ürün Adı</span>
+          </button>
+
+          {/* Hızlı Ürün Kodu */}
+          <button
+            onClick={() => openQuickEdit(null, 'name_sku')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <Tag className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Ürün Kodu</span>
+          </button>
+
+          {/* Hızlı Kategori */}
+          <button
+            onClick={() => openQuickEdit(null, 'category')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <FolderTree className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Kategori</span>
+          </button>
+
+          {/* Hızlı Fiyat */}
+          <button
+            onClick={() => openQuickEdit(null, 'price')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <DollarSign className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Fiyat</span>
+          </button>
+
+          {/* Hızlı Satış Fiyatı */}
+          <button
+            onClick={() => openQuickEdit(null, 'price')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <DollarSign className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Satış Fiyatı</span>
+          </button>
+
+          {/* Hızlı KDV Durumu / Oranı */}
+          <button
+            onClick={() => openQuickEdit(null, 'vat')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <Percent className="w-4 h-4 text-amber-600" />
+            <span>Hızlı KDV Durumu & Oranı</span>
+          </button>
+
+          {/* Hızlı Kısa Açıklama */}
+          <button
+            onClick={() => openQuickEdit(null, 'short_desc')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <FileText className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Kısa Açıklama</span>
+          </button>
+
+          {/* Hızlı Detaylı Açıklama */}
+          <button
+            onClick={() => openQuickEdit(null, 'full_desc')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <AlignLeft className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Detaylı Açıklama</span>
+          </button>
+
+          {/* Hızlı Varyantlar */}
+          <button
+            onClick={() => openQuickEdit(null, 'variants')}
+            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-full transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <Layers className="w-4 h-4 text-amber-600" />
+            <span>Hızlı Varyantlar</span>
           </button>
         </div>
       </div>
@@ -395,6 +522,16 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
 
                       <td className="p-3.5 text-right">
                         <div className="flex items-center justify-end space-x-1.5">
+                          {/* Hızlı Düzenle Butonu */}
+                          <button
+                            onClick={() => openQuickEdit(p.id, 'name_sku')}
+                            className="p-1.5 rounded-lg text-amber-900 bg-amber-100 hover:bg-amber-200 transition-colors cursor-pointer border border-amber-300 font-extrabold text-[10px] flex items-center gap-1"
+                            title="Hızlı Düzenle (Kategori, Fiyat, KDV, Açıklama, Varyant)"
+                          >
+                            <Zap className="w-3.5 h-3.5 text-amber-600" />
+                            <span className="hidden xl:inline">Hızlı Düzenle</span>
+                          </button>
+
                           <button
                             onClick={() => {
                               setQuickUploadProductId(p.id);
@@ -534,6 +671,18 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
           onClose={() => {
             setShowQuickUploadModal(false);
             setQuickUploadProductId(null);
+          }}
+        />
+      )}
+
+      {/* Quick Edit Modal (Hızlı Kategori, Fiyat, KDV, Açıklama, Varyant vb.) */}
+      {showQuickEditModal && (
+        <AdminQuickEditModal
+          productId={quickEditProductId}
+          initialTab={quickEditTab}
+          onClose={() => {
+            setShowQuickEditModal(false);
+            setQuickEditProductId(null);
           }}
         />
       )}

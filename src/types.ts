@@ -26,6 +26,7 @@ export interface ProductVariant {
 export interface Product {
   id: string;
   name: string;
+  brand?: string;
   slug: string;
   sku: string;
   categoryId: string;

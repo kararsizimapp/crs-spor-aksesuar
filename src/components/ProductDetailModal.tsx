@@ -120,12 +120,6 @@ export const ProductDetailModal: React.FC = () => {
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
                 </button>
-
-                {product.isNew && (
-                  <span className="absolute top-2.5 left-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
-                    YENİ
-                  </span>
-                )}
               </div>
 
               {/* Thumbnails Gallery */}
@@ -148,11 +142,18 @@ export const ProductDetailModal: React.FC = () => {
               )}
             </div>
 
-            {/* RIGHT COLUMN: Info, Price, Description, Variants & Specs */}
+            {/* RIGHT COLUMN: Info, Price, Description, Variants */}
             <div className="space-y-3">
-              {/* SKU & Title */}
+              {/* Brand, SKU & Title */}
               <div>
-                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                {/* Brand Name (small text, top-left of title) */}
+                {product.brand && (
+                  <div className="text-xs font-black text-amber-600 uppercase tracking-wider mb-0.5">
+                    {product.brand}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                   <span className="bg-teal-700 text-teal-50 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded">
                     {product.sku}
                   </span>
@@ -167,30 +168,28 @@ export const ProductDetailModal: React.FC = () => {
               </div>
 
               {/* Price Box */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  ÜRÜN FİYATI
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 shadow-sm space-y-2">
+                <div className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider flex items-center justify-between">
+                  <span>ÜRÜN FİYAT DETAYI</span>
+                  <span className="bg-emerald-950 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-800/80">
+                    %{effectiveVatRate} KDV
+                  </span>
                 </div>
 
                 {product.price && isPriceVisible ? (
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+                  <div className="grid grid-cols-2 gap-2.5 pt-1 border-t border-slate-800/80">
                     {/* KDV Hariç Fiyat */}
-                    <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-                      <span className="text-[10px] text-slate-400 font-semibold block mb-0.5">KDV HARİÇ FİYAT</span>
-                      <span className="text-base sm:text-lg font-black text-teal-400">
+                    <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-slate-400 font-bold block mb-0.5 uppercase tracking-wider">KDV HARİÇ</span>
+                      <span className="text-base sm:text-lg font-mono font-black text-slate-200">
                         {exVatText}
                       </span>
                     </div>
 
                     {/* KDV Dahil Fiyat */}
-                    <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-[10px] text-slate-400 font-semibold block">KDV DAHİL FİYAT</span>
-                        <span className="bg-emerald-950 text-emerald-400 text-[9px] font-bold px-1 py-0.2 rounded border border-emerald-800/80">
-                          %{effectiveVatRate} KDV
-                        </span>
-                      </div>
-                      <span className="text-base sm:text-lg font-black text-emerald-400">
+                    <div className="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-emerald-400 font-bold block mb-0.5 uppercase tracking-wider">KDV DAHİL</span>
+                      <span className="text-base sm:text-xl font-mono font-black text-emerald-400">
                         {incVatText}
                       </span>
                     </div>
@@ -234,23 +233,6 @@ export const ProductDetailModal: React.FC = () => {
                         <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-1 py-0.2 rounded">
                           {variant.sku}
                         </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Specifications Table */}
-              {product.specifications && product.specifications.length > 0 && (
-                <div className="space-y-1">
-                  <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">
-                    Teknik Özellikler
-                  </h4>
-                  <div className="border border-slate-200 rounded-lg overflow-hidden divide-y divide-slate-100 text-xs">
-                    {product.specifications.map((spec) => (
-                      <div key={spec.id} className="grid grid-cols-12 p-1.5 bg-white hover:bg-slate-50">
-                        <span className="col-span-5 font-semibold text-slate-600">{spec.title}</span>
-                        <span className="col-span-7 font-bold text-slate-900">{spec.value}</span>
                       </div>
                     ))}
                   </div>

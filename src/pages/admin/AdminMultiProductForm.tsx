@@ -18,6 +18,7 @@ import {
 interface MultiProductRow {
   id: string;
   name: string;
+  brand: string;
   sku: string;
   categoryId: string;
   subcategoryId: string;
@@ -42,6 +43,7 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
 
   // Global defaults
   const [globalCategoryId, setGlobalCategoryId] = useState(defaultCatId);
+  const [globalBrand, setGlobalBrand] = useState('');
   const [globalStockStatus, setGlobalStockStatus] = useState<StockStatus>('Stokta Var');
 
   // Quick paste modal state
@@ -62,11 +64,13 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
   function createEmptyRow(
     idSuffix: string,
     catId: string,
-    stock: StockStatus
+    stock: StockStatus,
+    brandName = ''
   ): MultiProductRow {
     return {
       id: `row-${Date.now()}-${idSuffix}-${Math.random().toString(36).substring(2, 5)}`,
       name: '',
+      brand: brandName,
       sku: '',
       categoryId: catId,
       subcategoryId: '',
@@ -80,7 +84,7 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
   const handleAddRows = (count: number) => {
     const newRows: MultiProductRow[] = [];
     for (let i = 0; i < count; i++) {
-      newRows.push(createEmptyRow(`${rows.length + i + 1}`, globalCategoryId, globalStockStatus));
+      newRows.push(createEmptyRow(`${rows.length + i + 1}`, globalCategoryId, globalStockStatus, globalBrand));
     }
     setRows(prev => [...prev, ...newRows]);
   };
@@ -108,6 +112,11 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
         return updated;
       })
     );
+  };
+
+  const handleApplyGlobalBrand = (newBrand: string) => {
+    setGlobalBrand(newBrand);
+    setRows(prev => prev.map(r => ({ ...r, brand: newBrand })));
   };
 
   const handleApplyGlobalCategory = (newCatId: string) => {
@@ -192,6 +201,7 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
 
         await addProduct({
           name: row.name.trim(),
+          brand: row.brand?.trim() || undefined,
           sku: skuVal,
           slug: '',
           categoryId: row.categoryId,
@@ -283,7 +293,18 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Varsayılan Marka (Tüm Satırlara Uygula)</label>
+            <input
+              type="text"
+              placeholder="örn. SELEX, ADIDAS"
+              value={globalBrand}
+              onChange={e => handleApplyGlobalBrand(e.target.value)}
+              className="w-full p-2.5 bg-amber-50/50 border border-amber-300 rounded-xl font-extrabold uppercase text-amber-950 placeholder:normal-case font-mono"
+            />
+          </div>
+
           <div>
             <label className="block font-bold text-slate-700 mb-1">Varsayılan Kategori (Tüm Satırlara Uygula)</label>
             <select
@@ -341,6 +362,7 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
             <thead>
               <tr className="bg-slate-900 text-slate-200 uppercase font-black tracking-wider text-[11px]">
                 <th className="py-3 px-3 w-12 text-center border-b border-slate-800">#</th>
+                <th className="py-3 px-3 min-w-[120px] border-b border-slate-800">Marka</th>
                 <th className="py-3 px-3 min-w-[220px] border-b border-slate-800">Ürün Adı *</th>
                 <th className="py-3 px-3 min-w-[120px] border-b border-slate-800">SKU / Kod</th>
                 <th className="py-3 px-3 min-w-[160px] border-b border-slate-800">Kategori</th>
@@ -364,6 +386,17 @@ export const AdminMultiProductForm: React.FC<AdminMultiProductFormProps> = ({
                     {/* Index */}
                     <td className="py-2.5 px-3 text-center font-bold text-slate-400 font-mono">
                       {idx + 1}
+                    </td>
+
+                    {/* Brand */}
+                    <td className="py-2.5 px-3">
+                      <input
+                        type="text"
+                        placeholder="örn. ADIDAS, SCX"
+                        value={row.brand}
+                        onChange={e => handleRowChange(row.id, 'brand', e.target.value)}
+                        className="w-full p-2 border border-amber-300 bg-amber-50/50 rounded-xl font-bold uppercase text-amber-950 text-xs"
+                      />
                     </td>
 
                     {/* Product Name */}

@@ -36,6 +36,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
 
   // Form State
   const [name, setName] = useState(existingProduct?.name || '');
+  const [brand, setBrand] = useState(existingProduct?.brand || '');
   const [sku, setSku] = useState(existingProduct?.sku || '');
   const [slug, setSlug] = useState(existingProduct?.slug || '');
   const [categoryId, setCategoryId] = useState(existingProduct?.categoryId || (categories[0]?.id || ''));
@@ -201,6 +202,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
 
     const productPayload = {
       name: name.trim(),
+      brand: brand.trim() || undefined,
       sku: sku.trim(),
       slug: slug || generateSlug(`${sku} ${name}`),
       categoryId,
@@ -322,7 +324,36 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
         {/* TAB 1: BASIC INFO */}
         {activeFormTab === 'basic' && (
           <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="sm:col-span-1">
+                <label className="block font-bold text-slate-800 mb-1">
+                  Marka Adı
+                </label>
+                <input
+                  type="text"
+                  placeholder="örn. ADIDAS, SELEX, SCX"
+                  value={brand}
+                  onChange={e => setBrand(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-amber-300 bg-amber-50/50 focus:bg-white focus:outline-none focus:border-amber-500 font-extrabold uppercase text-amber-950"
+                />
+                {/* Existing Brand Quick Pills */}
+                {Array.from(new Set(products.map(p => p.brand).filter(Boolean))).length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    <span className="text-[10px] text-slate-400 self-center">Hızlı Seç:</span>
+                    {Array.from(new Set(products.map(p => p.brand).filter(Boolean))).map((b, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setBrand(b as string)}
+                        className="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 font-extrabold px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                      >
+                        {b}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-800 mb-1">Ürün Adı *</label>
                 <input
