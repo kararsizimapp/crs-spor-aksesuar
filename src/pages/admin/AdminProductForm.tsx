@@ -3,6 +3,7 @@ import { useCatalog } from '../../context/CatalogContext';
 import { Product, ProductVariant, Specification, PriceType, StockStatus, ProductStatus } from '../../types';
 import { generateSlug } from '../../utils/formatters';
 import { convertFileToBase64 } from '../../utils/imageUtils';
+import { AdminMultiProductForm } from './AdminMultiProductForm';
 import {
   ArrowLeft,
   Save,
@@ -15,6 +16,8 @@ import {
   Sparkles,
   Upload,
   Loader2,
+  ListPlus,
+  FileText,
 } from 'lucide-react';
 
 interface AdminProductFormProps {
@@ -28,7 +31,8 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
   const existingProduct = productId ? products.find(p => p.id === productId) : null;
 
   // Active Tab in Form
-  const [activeFormTab, setActiveFormTab] = useState<'basic' | 'price' | 'specs' | 'images' | 'variants' | 'seo'>('basic');
+  const [activeFormTab, setActiveFormTab] = useState<'basic' | 'price' | 'images' | 'variants'>('basic');
+  const [creationMode, setCreationMode] = useState<'single' | 'multi'>('single');
 
   // Form State
   const [name, setName] = useState(existingProduct?.name || '');
@@ -238,10 +242,19 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
     onClose();
   };
 
+  if (!existingProduct && creationMode === 'multi') {
+    return (
+      <AdminMultiProductForm
+        onClose={onClose}
+        onSwitchToSingleForm={() => setCreationMode('single')}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Top Bar */}
-      <div className="bg-slate-950 text-white p-5 rounded-2xl border border-slate-800 shadow-md flex items-center justify-between">
+      <div className="bg-slate-950 text-white p-5 rounded-2xl border border-slate-800 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <button
             onClick={onClose}
@@ -259,32 +272,44 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
           </div>
         </div>
 
-        <button
-          onClick={handleSave}
-          className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-900/30 flex items-center gap-1.5 cursor-pointer"
-        >
-          <Save className="w-4 h-4" />
-          Kaydet ve Yayınla
-        </button>
+        <div className="flex items-center gap-2">
+          {!existingProduct && (
+            <button
+              type="button"
+              onClick={() => setCreationMode('multi')}
+              className="px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-teal-300 font-bold text-xs rounded-xl border border-slate-800 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <ListPlus className="w-4 h-4 text-teal-400" />
+              Çoklu Ürün Ekle (Tek Menü)
+            </button>
+          )}
+
+          <button
+            onClick={handleSave}
+            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-900/30 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Save className="w-4 h-4" />
+            Kaydet ve Yayınla
+          </button>
+        </div>
       </div>
 
       {/* Tabs Bar */}
-      <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap gap-1">
+      <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs flex flex-wrap gap-1.5">
         {[
-          { id: 'basic', label: 'Temel Bilgiler' },
-          { id: 'price', label: 'Fiyat & Stok' },
-          { id: 'specs', label: 'Teknik Özellikler' },
-          { id: 'images', label: 'Görseller' },
-          { id: 'variants', label: `Varyantlar (${variants.length})` },
-          { id: 'seo', label: 'SEO' },
+          { id: 'basic', label: 'Hızlı Temel Bilgiler' },
+          { id: 'price', label: 'Hızlı Fiyat & Stok' },
+          { id: 'images', label: 'Hızlı Görseller' },
+          { id: 'variants', label: `Hızlı Varyantlar (${variants.length})` },
         ].map(tab => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => setActiveFormTab(tab.id as any)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeFormTab === tab.id
-                ? 'bg-teal-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-teal-600 text-white shadow-md'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
             {tab.label}
@@ -474,20 +499,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div>
-                <label className="block font-bold text-slate-800 mb-1">Fiyat Türü</label>
-                <select
-                  value={priceType}
-                  onChange={e => setPriceType(e.target.value as PriceType)}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 bg-white font-semibold"
-                >
-                  <option value="Tek Fiyatı">Tek Fiyatı</option>
-                  <option value="Set Fiyatı">Set Fiyatı</option>
-                  <option value="Paket Fiyatı">Paket Fiyatı</option>
-                </select>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block font-bold text-slate-800 mb-1">KDV Durumu</label>
                 <select
@@ -545,137 +557,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
           </div>
         )}
 
-        {/* TAB 3: TECHNICAL SPECS */}
-        {activeFormTab === 'specs' && (
-          <div className="space-y-6 text-xs">
-            <h3 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2">
-              Hazır Özellik Alanları
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">Malzeme Yapısı</label>
-                <input
-                  type="text"
-                  placeholder="örn. Kırılmaz Esnek Plastik"
-                  value={material}
-                  onChange={e => setMaterial(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">Ağırlık</label>
-                <input
-                  type="text"
-                  placeholder="örn. 30 g / 1.5 kg"
-                  value={weight}
-                  onChange={e => setWeight(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">Ölçüler / Boyut</label>
-                <input
-                  type="text"
-                  placeholder="örn. 18.5 cm x 5 cm"
-                  value={dimensions}
-                  onChange={e => setDimensions(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">Paket Adedi</label>
-                <input
-                  type="text"
-                  placeholder="örn. 50 Adet / Paket"
-                  value={packageQuantity}
-                  onChange={e => setPackageQuantity(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">Set İçeriği</label>
-                <input
-                  type="text"
-                  placeholder="örn. 12 Çember + Taşıma Çantası"
-                  value={setContents}
-                  onChange={e => setSetContents(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-slate-300"
-                />
-              </div>
-            </div>
-
-            {/* Dynamic Specifications */}
-            <div className="pt-4 border-t border-slate-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-sm">
-                  Dinamik Teknik Özellikler ({specifications.length})
-                </h3>
-                <button
-                  type="button"
-                  onClick={handleAddSpec}
-                  className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer border border-teal-200"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Özellik Ekle
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {specifications.map((spec, index) => (
-                  <div key={spec.id} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
-                    <input
-                      type="text"
-                      placeholder="Başlık (örn. Yükseklik)"
-                      value={spec.title}
-                      onChange={e => handleUpdateSpec(spec.id, 'title', e.target.value)}
-                      className="w-1/3 p-1.5 bg-white border border-slate-300 rounded font-semibold text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Değer (örn. 45 cm)"
-                      value={spec.value}
-                      onChange={e => handleUpdateSpec(spec.id, 'value', e.target.value)}
-                      className="flex-1 p-1.5 bg-white border border-slate-300 rounded text-xs"
-                    />
-                    <div className="flex items-center space-x-1">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveSpec(index, 'up')}
-                        disabled={index === 0}
-                        className="p-1 hover:bg-slate-200 rounded text-slate-600 disabled:opacity-30 cursor-pointer"
-                      >
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMoveSpec(index, 'down')}
-                        disabled={index === specifications.length - 1}
-                        className="p-1 hover:bg-slate-200 rounded text-slate-600 disabled:opacity-30 cursor-pointer"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSpec(spec.id)}
-                        className="p-1 hover:bg-red-100 rounded text-red-600 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: IMAGES */}
+        {/* TAB 3: IMAGES */}
         {activeFormTab === 'images' && (
           <div className="space-y-6 text-xs">
             {/* Cover Image Section */}
@@ -876,33 +758,6 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 6: SEO */}
-        {activeFormTab === 'seo' && (
-          <div className="space-y-4 text-xs">
-            <div>
-              <label className="block font-bold text-slate-800 mb-1">SEO Title</label>
-              <input
-                type="text"
-                placeholder="örn. SCX 1080 Antrenman Çanağı Standart | SCUCS Spor"
-                value={seoTitle}
-                onChange={e => setSeoTitle(e.target.value)}
-                className="w-full p-2.5 rounded-lg border border-slate-300"
-              />
-            </div>
-
-            <div>
-              <label className="block font-bold text-slate-800 mb-1">SEO Description</label>
-              <textarea
-                rows={3}
-                placeholder="Google ve arama motorlarında görünecek ürün meta açıklaması..."
-                value={seoDescription}
-                onChange={e => setSeoDescription(e.target.value)}
-                className="w-full p-3 rounded-lg border border-slate-300"
-              />
             </div>
           </div>
         )}

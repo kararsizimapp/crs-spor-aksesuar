@@ -39,15 +39,16 @@ export interface Product {
   showPrice: boolean;
   taxStatus: 'KDV Dahil' | 'KDV Hariç';
   vatRate?: number;
+  taxRate?: number;
   stockStatus: StockStatus;
   status: ProductStatus;
   featured: boolean;
   isNew: boolean;
   coverImage: string;
   images: string[];
-  colors: string[];
+  colors?: string[];
   specifications: Specification[];
-  variants: ProductVariant[];
+  variants?: ProductVariant[];
   packageQuantity?: string;
   setContents?: string;
   material?: string;

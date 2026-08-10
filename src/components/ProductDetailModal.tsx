@@ -169,7 +169,7 @@ export const ProductDetailModal: React.FC = () => {
               {/* Price Box */}
               <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  ÜRÜN FİYATI {product.price && isPriceVisible ? `(${product.priceType})` : ''}
+                  ÜRÜN FİYATI
                 </div>
 
                 {product.price && isPriceVisible ? (

@@ -52,6 +52,7 @@ interface CatalogContextType {
   addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  deleteProductsBulk: (ids: string[]) => Promise<void>;
   duplicateProduct: (id: string) => Promise<void>;
   togglePublishProduct: (id: string) => Promise<void>;
 
@@ -113,12 +114,16 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (snapshot.empty) {
           // Seed Firestore with initial products if empty
           try {
-            const batch = writeBatch(db);
-            INITIAL_PRODUCTS.forEach((p) => {
-              const ref = doc(db, 'products', p.id);
-              batch.set(ref, sanitizeForFirestore(p));
-            });
-            await batch.commit();
+            const CHUNK_SIZE = 400;
+            for (let i = 0; i < INITIAL_PRODUCTS.length; i += CHUNK_SIZE) {
+              const chunk = INITIAL_PRODUCTS.slice(i, i + CHUNK_SIZE);
+              const batch = writeBatch(db);
+              chunk.forEach((p) => {
+                const ref = doc(db, 'products', p.id);
+                batch.set(ref, sanitizeForFirestore(p));
+              });
+              await batch.commit();
+            }
           } catch (e) {
             console.error('Error seeding initial products to Firestore:', e);
           }
@@ -126,6 +131,28 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const loadedProducts = snapshot.docs.map((doc) => doc.data() as Product);
           loadedProducts.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
           setProducts(loadedProducts);
+
+          // If Firestore has fewer products than catalog, auto-sync missing catalog items
+          if (loadedProducts.length < INITIAL_PRODUCTS.length) {
+            const existingIds = new Set(loadedProducts.map((p) => p.id));
+            const missing = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
+            if (missing.length > 0) {
+              try {
+                const CHUNK_SIZE = 400;
+                for (let i = 0; i < missing.length; i += CHUNK_SIZE) {
+                  const chunk = missing.slice(i, i + CHUNK_SIZE);
+                  const batch = writeBatch(db);
+                  chunk.forEach((p) => {
+                    const ref = doc(db, 'products', p.id);
+                    batch.set(ref, sanitizeForFirestore(p));
+                  });
+                  await batch.commit();
+                }
+              } catch (err) {
+                console.error('Error auto-syncing missing products:', err);
+              }
+            }
+          }
         }
       },
       (err) => {
@@ -274,9 +301,32 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setProducts((prev) => prev.filter((p) => p.id !== id));
     try {
       await deleteDoc(doc(db, 'products', id));
-      showNotification('Ürün silindi.', 'info');
+      showNotification('Ürün başarıyla silindi.', 'info');
     } catch (err) {
       console.error('Error deleting product:', err);
+      showNotification('Ürün silinirken bir hata oluştu.', 'error');
+    }
+  };
+
+  const deleteProductsBulk = async (ids: string[]) => {
+    if (!ids || ids.length === 0) return;
+    const targetSet = new Set(ids);
+    setProducts((prev) => prev.filter((p) => !targetSet.has(p.id)));
+
+    try {
+      const chunkSize = 450;
+      for (let i = 0; i < ids.length; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+        chunk.forEach((id) => {
+          batch.delete(doc(db, 'products', id));
+        });
+        await batch.commit();
+      }
+      showNotification(`${ids.length} adet ürün başarıyla silindi.`, 'info');
+    } catch (err) {
+      console.error('Error bulk deleting products:', err);
+      showNotification('Toplu ürün silme işlemi sırasında hata oluştu.', 'error');
     }
   };
 
@@ -442,21 +492,36 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const resetToDemoData = async () => {
     try {
-      // Clear Firestore Products
+      // Clear Firestore Products in chunks
       const prodDocs = await getDocs(collection(db, 'products'));
-      const batch = writeBatch(db);
-      prodDocs.forEach((d) => batch.delete(d.ref));
-      INITIAL_PRODUCTS.forEach((p) => batch.set(doc(db, 'products', p.id), sanitizeForFirestore(p)));
+      const prodRefs = prodDocs.docs.map((d) => d.ref);
+      const CHUNK = 400;
 
-      // Clear Firestore Categories
+      for (let i = 0; i < prodRefs.length; i += CHUNK) {
+        const batch = writeBatch(db);
+        prodRefs.slice(i, i + CHUNK).forEach((ref) => batch.delete(ref));
+        await batch.commit();
+      }
+
+      // Re-insert INITIAL_PRODUCTS in chunks
+      for (let i = 0; i < INITIAL_PRODUCTS.length; i += CHUNK) {
+        const batch = writeBatch(db);
+        INITIAL_PRODUCTS.slice(i, i + CHUNK).forEach((p) =>
+          batch.set(doc(db, 'products', p.id), sanitizeForFirestore(p))
+        );
+        await batch.commit();
+      }
+
+      // Clear & Re-insert Categories and Settings
       const catDocs = await getDocs(collection(db, 'categories'));
-      catDocs.forEach((d) => batch.delete(d.ref));
-      INITIAL_CATEGORIES.forEach((c) => batch.set(doc(db, 'categories', c.id), sanitizeForFirestore(c)));
+      const catBatch = writeBatch(db);
+      catDocs.forEach((d) => catBatch.delete(d.ref));
+      INITIAL_CATEGORIES.forEach((c) =>
+        catBatch.set(doc(db, 'categories', c.id), sanitizeForFirestore(c))
+      );
+      catBatch.set(doc(db, 'settings', 'general'), sanitizeForFirestore(DEFAULT_SETTINGS));
+      await catBatch.commit();
 
-      // Reset Settings
-      batch.set(doc(db, 'settings', 'general'), sanitizeForFirestore(DEFAULT_SETTINGS));
-
-      await batch.commit();
       showNotification('Sistem varsayılan demo verilerine sıfırlandı.', 'info');
     } catch (err) {
       console.error('Error resetting to demo data:', err);
@@ -578,6 +643,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addProduct,
         updateProduct,
         deleteProduct,
+        deleteProductsBulk,
         duplicateProduct,
         togglePublishProduct,
         addCategory,
