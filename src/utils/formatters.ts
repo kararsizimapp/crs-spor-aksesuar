@@ -16,6 +16,30 @@ export function formatPrice(price?: number | null, currency: string = 'TRY', sho
   return `${formatted} ${symbol}`;
 }
 
+export function calculateTaxPrices(
+  price?: number | null,
+  taxStatus: 'KDV Dahil' | 'KDV Hariç' = 'KDV Hariç',
+  vatRate: number = 20
+) {
+  if (price === null || price === undefined || isNaN(price)) {
+    return { exVat: null, incVat: null, vatRate };
+  }
+  const effectiveRate = vatRate !== undefined && !isNaN(vatRate) ? vatRate : 20;
+  const rateDecimal = effectiveRate / 100;
+  let exVat: number;
+  let incVat: number;
+
+  if (taxStatus === 'KDV Dahil') {
+    incVat = price;
+    exVat = price / (1 + rateDecimal);
+  } else {
+    exVat = price;
+    incVat = price * (1 + rateDecimal);
+  }
+
+  return { exVat, incVat, vatRate: effectiveRate };
+}
+
 export function generateSlug(text: string): string {
   const trMap: { [key: string]: string } = {
     'ç': 'c', 'Ç': 'c',

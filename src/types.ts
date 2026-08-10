@@ -38,6 +38,7 @@ export interface Product {
   priceType: PriceType;
   showPrice: boolean;
   taxStatus: 'KDV Dahil' | 'KDV Hariç';
+  vatRate?: number;
   stockStatus: StockStatus;
   status: ProductStatus;
   featured: boolean;

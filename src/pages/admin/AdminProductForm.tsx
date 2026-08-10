@@ -50,6 +50,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
   const [priceType, setPriceType] = useState<PriceType>(existingProduct?.priceType || 'Tek Fiyatı');
   const [showPrice, setShowPrice] = useState<boolean>(existingProduct?.showPrice ?? true);
   const [taxStatus, setTaxStatus] = useState<'KDV Dahil' | 'KDV Hariç'>(existingProduct?.taxStatus || 'KDV Dahil');
+  const [vatRate, setVatRate] = useState<number>(existingProduct?.vatRate ?? 20);
   const [stockStatus, setStockStatus] = useState<StockStatus>(existingProduct?.stockStatus || 'Stokta Var');
 
   // Specs & Details State
@@ -208,6 +209,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
       priceType,
       showPrice,
       taxStatus,
+      vatRate,
       stockStatus,
       status,
       featured,
@@ -472,7 +474,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div>
                 <label className="block font-bold text-slate-800 mb-1">Fiyat Türü</label>
                 <select
@@ -496,6 +498,22 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
                   <option value="KDV Dahil">KDV Dahil</option>
                   <option value="KDV Hariç">KDV Hariç</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">KDV Oranı (%)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="20"
+                    value={vatRate}
+                    onChange={e => setVatRate(parseFloat(e.target.value) || 0)}
+                    className="w-full p-2.5 rounded-lg border border-slate-300 bg-white font-bold text-slate-900"
+                  />
+                  <span className="absolute right-3 top-2.5 text-slate-400 font-bold">%</span>
+                </div>
               </div>
 
               <div>

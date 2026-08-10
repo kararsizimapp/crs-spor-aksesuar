@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product } from '../types';
-import { formatPrice } from '../utils/formatters';
+import { formatPrice, calculateTaxPrices } from '../utils/formatters';
 import { useCatalog } from '../context/CatalogContext';
 import { MessageSquare, ArrowRight, Layers, Award } from 'lucide-react';
 
@@ -51,11 +51,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
                 {product.sku}
               </span>
               {/* Price Tag */}
-              <span className={`font-bold text-xs px-2.5 py-1 rounded-md border ${
-                isQuoteOnly ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-teal-50 text-teal-700 border-teal-200'
-              }`}>
-                {priceDisplay} {product.price && isPriceVisible ? `(${product.priceType})` : ''}
-              </span>
+              {isQuoteOnly ? (
+                <span className="font-bold text-xs px-2.5 py-1 rounded-md border bg-slate-100 text-slate-700 border-slate-200">
+                  {priceDisplay}
+                </span>
+              ) : (
+                <div className="flex flex-wrap items-center gap-1.5 font-bold text-xs">
+                  <span className="px-2.5 py-1 rounded-md border bg-teal-50 text-teal-800 border-teal-200">
+                    {formatPrice(calculateTaxPrices(product.price, product.taxStatus, product.vatRate ?? 20).exVat, product.currency, isPriceVisible)} (KDV Hariç)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md border bg-emerald-50 text-emerald-800 border-emerald-200">
+                    {formatPrice(calculateTaxPrices(product.price, product.taxStatus, product.vatRate ?? 20).incVat, product.currency, isPriceVisible)} (KDV Dahil)
+                  </span>
+                </div>
+              )}
             </div>
 
             <h3 
@@ -156,11 +165,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         <div>
           {/* Product Price Tag (Badge) */}
           <div className="mb-2">
-            <span className={`inline-block font-bold text-xs px-2.5 py-1 rounded-md shadow-2xs border ${
-              isQuoteOnly ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-teal-50 text-teal-700 border-teal-200'
-            }`}>
-              {priceDisplay} {product.price && isPriceVisible ? `(${product.priceType})` : ''}
-            </span>
+            {isQuoteOnly ? (
+              <span className="inline-block font-bold text-xs px-2.5 py-1 rounded-md shadow-2xs border bg-slate-100 text-slate-600 border-slate-200">
+                {priceDisplay}
+              </span>
+            ) : (
+              <div className="flex flex-col gap-1 text-[11px] font-bold">
+                <span className="inline-block px-2 py-0.5 rounded-md border bg-teal-50 text-teal-800 border-teal-200/80">
+                  {formatPrice(calculateTaxPrices(product.price, product.taxStatus, product.vatRate ?? 20).exVat, product.currency, isPriceVisible)} (KDV Hariç)
+                </span>
+                <span className="inline-block px-2 py-0.5 rounded-md border bg-emerald-50 text-emerald-800 border-emerald-200/80">
+                  {formatPrice(calculateTaxPrices(product.price, product.taxStatus, product.vatRate ?? 20).incVat, product.currency, isPriceVisible)} (KDV Dahil)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Product Title */}

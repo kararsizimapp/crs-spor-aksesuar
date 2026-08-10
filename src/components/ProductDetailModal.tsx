@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
 import { useCatalog } from '../context/CatalogContext';
-import { formatPrice, generateWhatsappLink } from '../utils/formatters';
+import { formatPrice, calculateTaxPrices } from '../utils/formatters';
 import {
   X,
-  MessageSquare,
-  Sparkles,
-  Layers,
   Maximize2,
-  CheckCircle2,
-  Package,
   Info,
   ChevronRight,
   Share2,
@@ -18,9 +13,7 @@ export const ProductDetailModal: React.FC = () => {
   const {
     selectedProductDetail,
     setSelectedProductDetail,
-    setQuoteModalProduct,
     setLightboxImage,
-    products,
     categories,
     settings,
     showNotification,
@@ -32,11 +25,9 @@ export const ProductDetailModal: React.FC = () => {
 
   const product = selectedProductDetail;
   const isPriceVisible = settings.globalShowPrice && product.showPrice;
-  const priceDisplay = formatPrice(product.price, product.currency, isPriceVisible);
-  const isQuoteOnly = !product.price || !isPriceVisible;
 
   const categoryObj = categories.find(c => c.id === product.categoryId);
-  const subcategoryObj = categoryObj?.subcategories.find(s => s.id === product.subcategoryId);
+  const subcategoryObj = categoryObj?.subcategories?.find(s => s.id === product.subcategoryId);
 
   // Gallery images list
   const allImages = Array.from(
@@ -48,17 +39,6 @@ export const ProductDetailModal: React.FC = () => {
   ).filter(Boolean);
 
   const currentImage = allImages[activeImageIndex] || product.coverImage;
-
-  // Related products from same category
-  const relatedProducts = products
-    .filter(p => p.categoryId === product.categoryId && p.id !== product.id)
-    .slice(0, 4);
-
-  const whatsappUrl = generateWhatsappLink(
-    settings.whatsappNumber,
-    product.name,
-    product.sku
-  );
 
   const handleShare = () => {
     if (navigator.share) {
@@ -73,17 +53,24 @@ export const ProductDetailModal: React.FC = () => {
     }
   };
 
+  // Tax calculations
+  const effectiveVatRate = product.vatRate !== undefined && !isNaN(product.vatRate) ? product.vatRate : 20;
+  const taxInfo = calculateTaxPrices(product.price, product.taxStatus, effectiveVatRate);
+
+  const exVatText = taxInfo.exVat !== null ? formatPrice(taxInfo.exVat, product.currency, isPriceVisible) : '—';
+  const incVatText = taxInfo.incVat !== null ? formatPrice(taxInfo.incVat, product.currency, isPriceVisible) : '—';
+
   return (
     <div 
-      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4"
       onClick={() => setSelectedProductDetail(null)}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-auto overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
-        {/* Top Header Bar */}
-        <div className="bg-slate-950 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
+        {/* Header Bar */}
+        <div className="bg-slate-950 text-white px-5 py-3 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
           <div className="flex items-center space-x-2 text-xs text-slate-400 truncate font-bold">
             <span>{categoryObj?.name || 'Ürün Kataloğu'}</span>
             {subcategoryObj && (
@@ -112,12 +99,14 @@ export const ProductDetailModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-6 max-h-[85vh] overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left: Gallery Column */}
-            <div className="lg:col-span-6 space-y-4">
-              {/* Main Image View */}
-              <div className="relative bg-slate-50 border border-slate-200 rounded-xl overflow-hidden aspect-4/3 group flex items-center justify-center p-2">
+        {/* Modal Main Body - Single Screen Layout */}
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+            
+            {/* LEFT COLUMN: Image & Gallery */}
+            <div className="space-y-3">
+              {/* Main Image */}
+              <div className="relative bg-slate-50 border border-slate-200 rounded-xl overflow-hidden aspect-square max-h-72 w-full group flex items-center justify-center p-3">
                 <img
                   src={currentImage}
                   alt={product.name}
@@ -126,14 +115,14 @@ export const ProductDetailModal: React.FC = () => {
 
                 <button
                   onClick={() => setLightboxImage(currentImage)}
-                  className="absolute bottom-3 right-3 bg-slate-900/80 hover:bg-slate-900 text-white p-2 rounded-lg backdrop-blur-xs transition-colors cursor-pointer shadow-md"
+                  className="absolute bottom-2.5 right-2.5 bg-slate-900/80 hover:bg-slate-900 text-white p-1.5 rounded-lg backdrop-blur-xs transition-colors cursor-pointer shadow-md"
                   title="Görseli Büyüt"
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  <Maximize2 className="w-3.5 h-3.5" />
                 </button>
 
                 {product.isNew && (
-                  <span className="absolute top-3 left-3 bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-sm uppercase tracking-wider">
+                  <span className="absolute top-2.5 left-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs uppercase tracking-wider">
                     YENİ
                   </span>
                 )}
@@ -141,12 +130,12 @@ export const ProductDetailModal: React.FC = () => {
 
               {/* Thumbnails Gallery */}
               {allImages.length > 1 && (
-                <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                   {allImages.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`w-16 h-16 rounded-lg border-2 overflow-hidden flex-shrink-0 bg-slate-50 transition-all cursor-pointer ${
+                      className={`w-12 h-12 rounded-lg border-2 overflow-hidden flex-shrink-0 bg-slate-50 transition-all cursor-pointer ${
                         activeImageIndex === idx
                           ? 'border-teal-600 ring-2 ring-teal-600/30'
                           : 'border-slate-200 hover:border-slate-300'
@@ -157,102 +146,92 @@ export const ProductDetailModal: React.FC = () => {
                   ))}
                 </div>
               )}
-
-              {/* Package Content & Stock Note */}
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium">Stok Durumu:</span>
-                  <span className="font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded border border-teal-200/60 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
-                    {product.stockStatus}
-                  </span>
-                </div>
-                {product.packageQuantity && (
-                  <div className="flex items-center justify-between border-t border-slate-200/60 pt-2">
-                    <span className="text-slate-500 font-medium">Paket Adedi:</span>
-                    <span className="font-semibold text-slate-800">{product.packageQuantity}</span>
-                  </div>
-                )}
-                {product.setContents && (
-                  <div className="flex items-start justify-between border-t border-slate-200/60 pt-2">
-                    <span className="text-slate-500 font-medium">Set İçeriği:</span>
-                    <span className="font-semibold text-slate-800 text-right">{product.setContents}</span>
-                  </div>
-                )}
-              </div>
             </div>
 
-            {/* Right: Info Column */}
-            <div className="lg:col-span-6 space-y-5">
-              {/* Badges & SKU */}
+            {/* RIGHT COLUMN: Info, Price, Description, Variants & Specs */}
+            <div className="space-y-3">
+              {/* SKU & Title */}
               <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="bg-teal-700 text-teal-50 font-mono font-bold text-xs px-3 py-1 rounded-md shadow-2xs">
+                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                  <span className="bg-teal-700 text-teal-50 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded">
                     {product.sku}
                   </span>
-                  <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-md">
+                  <span className="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded">
                     {categoryObj?.name}
                   </span>
                 </div>
 
-                <h1 className="text-2xl font-black text-slate-900 leading-snug">
+                <h1 className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
                   {product.name}
                 </h1>
               </div>
 
-              {/* Price Banner */}
-              <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
-                <div>
-                  <div className="text-[11px] text-slate-400 font-medium uppercase tracking-wider mb-0.5">
-                    B2B Kataloğu Satış / Fiyat Bilgisi
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className={`font-black text-xl ${isQuoteOnly ? 'text-slate-200' : 'text-red-500'}`}>
-                      {priceDisplay}
-                    </span>
-                    {product.price && isPriceVisible && (
-                      <span className="text-xs text-slate-400 font-medium bg-slate-800 px-2 py-0.5 rounded">
-                        {product.priceType}
-                      </span>
-                    )}
-                  </div>
+              {/* Price Box */}
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  ÜRÜN FİYATI {product.price && isPriceVisible ? `(${product.priceType})` : ''}
                 </div>
 
-                <span className="text-xs text-emerald-400 font-semibold bg-emerald-950/80 border border-emerald-800/60 px-2.5 py-1 rounded-md">
-                  {product.taxStatus}
-                </span>
+                {product.price && isPriceVisible ? (
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+                    {/* KDV Hariç Fiyat */}
+                    <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
+                      <span className="text-[10px] text-slate-400 font-semibold block mb-0.5">KDV HARİÇ FİYAT</span>
+                      <span className="text-base sm:text-lg font-black text-teal-400">
+                        {exVatText}
+                      </span>
+                    </div>
+
+                    {/* KDV Dahil Fiyat */}
+                    <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[10px] text-slate-400 font-semibold block">KDV DAHİL FİYAT</span>
+                        <span className="bg-emerald-950 text-emerald-400 text-[9px] font-bold px-1 py-0.2 rounded border border-emerald-800/80">
+                          %{effectiveVatRate} KDV
+                        </span>
+                      </div>
+                      <span className="text-base sm:text-lg font-black text-emerald-400">
+                        {incVatText}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-slate-300 font-bold text-sm py-1">
+                    Fiyat için iletişime geçiniz
+                  </div>
+                )}
               </div>
 
-              {/* Short & Long Description */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5 text-teal-600" /> Ürün Açıklaması
+              {/* Description */}
+              <div className="space-y-1">
+                <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1">
+                  <Info className="w-3 h-3 text-teal-600" /> Ürün Açıklaması
                 </h4>
-                <p className="text-slate-600 text-xs leading-relaxed bg-slate-50/60 p-3 rounded-lg border border-slate-100">
+                <p className="text-slate-700 text-xs leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                   {product.description || product.shortDescription}
                 </p>
               </div>
 
-              {/* Variants Section (if any) */}
+              {/* Color / Model Variants */}
               {product.variants && product.variants.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    Renk ve Model Varyantları ({product.variants.length})
+                <div className="space-y-1">
+                  <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">
+                    Renk / Model Varyantları ({product.variants.length})
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {product.variants.map((variant) => (
                       <div
                         key={variant.id}
-                        className="flex items-center justify-between p-2 rounded-lg border border-slate-200 bg-white hover:border-teal-500 transition-colors"
+                        className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200 bg-white"
                       >
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1.5 min-w-0">
                           <span
-                            className="w-4 h-4 rounded-full border border-slate-300 flex-shrink-0"
+                            className="w-3.5 h-3.5 rounded-full border border-slate-300 flex-shrink-0"
                             style={{ backgroundColor: variant.color }}
                           />
-                          <span className="text-xs font-semibold text-slate-800">{variant.name}</span>
+                          <span className="text-[11px] font-semibold text-slate-800 truncate">{variant.name}</span>
                         </div>
-                        <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-1 py-0.2 rounded">
                           {variant.sku}
                         </span>
                       </div>
@@ -261,15 +240,15 @@ export const ProductDetailModal: React.FC = () => {
                 </div>
               )}
 
-              {/* Technical Specifications */}
+              {/* Specifications Table */}
               {product.specifications && product.specifications.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <div className="space-y-1">
+                  <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">
                     Teknik Özellikler
                   </h4>
-                  <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100 text-xs">
+                  <div className="border border-slate-200 rounded-lg overflow-hidden divide-y divide-slate-100 text-xs">
                     {product.specifications.map((spec) => (
-                      <div key={spec.id} className="grid grid-cols-12 p-2.5 bg-white hover:bg-slate-50">
+                      <div key={spec.id} className="grid grid-cols-12 p-1.5 bg-white hover:bg-slate-50">
                         <span className="col-span-5 font-semibold text-slate-600">{spec.title}</span>
                         <span className="col-span-7 font-bold text-slate-900">{spec.value}</span>
                       </div>
@@ -278,65 +257,9 @@ export const ProductDetailModal: React.FC = () => {
                 </div>
               )}
 
-              {/* CTAs: Quote & WhatsApp */}
-              <div className="pt-4 space-y-2.5">
-                <button
-                  onClick={() => {
-                    setSelectedProductDetail(null);
-                    setQuoteModalProduct(product);
-                  }}
-                  className="w-full py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-md shadow-teal-900/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Kurumsal Fiyat Teklifi Al
-                </button>
-
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  WhatsApp ile Doğrudan Bilgi Al
-                </a>
-              </div>
             </div>
+
           </div>
-
-          {/* Related Products Section */}
-          {relatedProducts.length > 0 && (
-            <div className="mt-10 pt-6 border-t border-slate-200">
-              <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <Package className="w-4 h-4 text-teal-600" />
-                Benzer Antrenman Ürünleri
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {relatedProducts.map(rel => (
-                  <div
-                    key={rel.id}
-                    onClick={() => {
-                      setSelectedProductDetail(rel);
-                      setActiveImageIndex(0);
-                    }}
-                    className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 cursor-pointer hover:border-teal-500 hover:shadow-md transition-all group"
-                  >
-                    <img
-                      src={rel.coverImage}
-                      alt={rel.name}
-                      className="w-full h-24 object-cover rounded-lg mb-2 group-hover:scale-105 transition-transform"
-                    />
-                    <span className="bg-teal-700 text-teal-50 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded inline-block mb-1">
-                      {rel.sku}
-                    </span>
-                    <h4 className="text-xs font-bold text-slate-900 truncate group-hover:text-teal-700">
-                      {rel.name}
-                    </h4>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
