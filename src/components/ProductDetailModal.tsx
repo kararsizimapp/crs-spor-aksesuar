@@ -7,6 +7,9 @@ import {
   Info,
   ChevronRight,
   Share2,
+  ShoppingBag,
+  Plus,
+  Minus,
 } from 'lucide-react';
 
 export const ProductDetailModal: React.FC = () => {
@@ -17,9 +20,12 @@ export const ProductDetailModal: React.FC = () => {
     categories,
     settings,
     showNotification,
+    addToCart,
+    setIsCartOpen,
   } = useCatalog();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [modalQty, setModalQty] = useState(1);
 
   if (!selectedProductDetail) return null;
 
@@ -219,6 +225,41 @@ export const ProductDetailModal: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Add to Quote Basket Bar */}
+              <div className="pt-4 border-t border-slate-200 mt-4 space-y-2">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center border-2 border-slate-200 rounded-xl bg-slate-50">
+                    <button
+                      onClick={() => setModalQty(prev => Math.max(prev - 1, 1))}
+                      className="p-2 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer rounded-l-lg"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-10 text-center font-black text-xs text-slate-900 font-mono">
+                      {modalQty}
+                    </span>
+                    <button
+                      onClick={() => setModalQty(prev => prev + 1)}
+                      className="p-2 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer rounded-r-lg"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      addToCart(product, modalQty);
+                      setSelectedProductDetail(null);
+                      setIsCartOpen(true);
+                    }}
+                    className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>Teklif Sepetine Ekle ({modalQty} Adet)</span>
+                  </button>
+                </div>
+              </div>
 
             </div>
 

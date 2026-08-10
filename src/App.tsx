@@ -9,6 +9,8 @@ import { LightboxModal } from './components/LightboxModal';
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { CategoriesPage } from './pages/CategoriesPage';
+import { FlipbookPage } from './pages/FlipbookPage';
+import { QuoteBasketDrawer } from './components/QuoteBasketDrawer';
 
 // Admin Pages
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -96,6 +98,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'home' && <HomePage />}
         {activeTab === 'products' && <ProductsPage />}
         {activeTab === 'categories' && <CategoriesPage />}
+        {activeTab === 'flipbook' && <FlipbookPage />}
 
         {activeTab === 'admin' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -216,6 +219,7 @@ const AppContent: React.FC = () => {
       <ProductDetailModal />
       <QuoteModal />
       <LightboxModal />
+      <QuoteBasketDrawer />
     </div>
   );
 };

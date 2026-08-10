@@ -16,6 +16,10 @@ export function formatPrice(price?: number | null, currency: string = 'TRY', sho
   return `${formatted} ${symbol}`;
 }
 
+export function formatCurrency(amount: number, currency: string = 'TRY'): string {
+  return formatPrice(amount, currency, true);
+}
+
 export function calculateTaxPrices(
   price?: number | null,
   taxStatus: 'KDV Dahil' | 'KDV Hariç' = 'KDV Hariç',

@@ -2,7 +2,7 @@ import React from 'react';
 import { Product } from '../types';
 import { formatPrice, calculateTaxPrices } from '../utils/formatters';
 import { useCatalog } from '../context/CatalogContext';
-import { ArrowRight, Award } from 'lucide-react';
+import { ArrowRight, Award, ShoppingBag } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -10,7 +10,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
-  const { setSelectedProductDetail, settings } = useCatalog();
+  const { setSelectedProductDetail, settings, addToCart } = useCatalog();
 
   const isPriceVisible = settings.globalShowPrice && product.showPrice;
   const priceDisplay = formatPrice(product.price, product.currency, isPriceVisible);
@@ -34,6 +34,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            decoding="async"
           />
         </div>
 
@@ -82,12 +83,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             </div>
           </div>
 
-          <div className="flex items-center justify-end pt-3 border-t border-slate-100 mt-2">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 mt-2">
+            <button
+              onClick={() => addToCart(product, 1)}
+              className="px-4 py-2.5 text-xs font-black rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Teklif Sepetine Ekle"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Sepete Ekle</span>
+            </button>
             <button
               onClick={() => setSelectedProductDetail(product)}
-              className="px-5 py-2.5 text-xs font-black rounded-xl bg-slate-900 text-white hover:bg-red-600 transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+              className="px-4 py-2.5 text-xs font-black rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
-              <span>Ürünü İncele</span>
+              <span>İncele</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -108,6 +117,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-xl"
           loading="lazy"
+          decoding="async"
         />
 
         {/* Overlay hover effect */}
@@ -166,12 +176,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         </div>
 
         {/* Bottom Actions */}
-        <div className="pt-3 border-t border-slate-100 mt-auto">
+        <div className="pt-3 border-t border-slate-100 mt-auto flex items-center gap-2">
+          <button
+            onClick={() => addToCart(product, 1)}
+            className="flex-1 py-2.5 px-3 text-xs font-black rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+            title="Teklif Sepetine Ekle"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Sepete Ekle</span>
+          </button>
           <button
             onClick={() => setSelectedProductDetail(product)}
-            className="w-full py-2.5 px-3 text-xs font-black rounded-xl bg-slate-900 hover:bg-red-600 text-white transition-all shadow-xs hover:shadow-md flex items-center justify-center gap-1.5 cursor-pointer group-hover:bg-red-600"
+            className="py-2.5 px-3 text-xs font-black rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+            title="Detaylı İncele"
           >
-            <span>Ürünü İncele</span>
+            <span>İncele</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

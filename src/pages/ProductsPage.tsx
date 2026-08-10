@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useCatalog } from '../context/CatalogContext';
 import { ProductCard } from '../components/ProductCard';
 import {
@@ -9,6 +9,8 @@ import {
   RotateCcw,
   SlidersHorizontal,
   PackageSearch,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 export const ProductsPage: React.FC = () => {
@@ -32,6 +34,8 @@ export const ProductsPage: React.FC = () => {
   const [sortOption, setSortOption] = useState<string>('default');
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
   const [maxPriceLimit, setMaxPriceLimit] = useState<number>(20000);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const ITEMS_PER_PAGE = 24;
 
   // Collect unique colors across products
   const availableColors = useMemo(() => {
@@ -97,6 +101,28 @@ export const ProductsPage: React.FC = () => {
     sortOption,
   ]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedSubcategory,
+    priceTypeFilter,
+    stockFilter,
+    selectedColor,
+    onlyFeatured,
+    onlyNew,
+    maxPriceLimit,
+    sortOption,
+  ]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) || 1;
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
   const resetAllFilters = () => {
     setSelectedCategory(null);
     setSelectedSubcategory(null);
@@ -108,6 +134,7 @@ export const ProductsPage: React.FC = () => {
     setOnlyNew(false);
     setMaxPriceLimit(20000);
     setSortOption('default');
+    setCurrentPage(1);
   };
 
   return (
@@ -408,17 +435,83 @@ export const ProductsPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div
-              className={
-                layoutMode === 'grid'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'
-                  : 'space-y-4'
-              }
-            >
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} layout={layoutMode} />
-              ))}
-            </div>
+            <>
+              <div
+                className={
+                  layoutMode === 'grid'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'
+                    : 'space-y-4'
+                }
+              >
+                {paginatedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} layout={layoutMode} />
+                ))}
+              </div>
+
+              {/* Pagination Bar */}
+              {totalPages > 1 && (
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+                  <div className="text-xs font-semibold text-slate-500">
+                    Toplam <span className="font-bold text-slate-900">{filteredProducts.length}</span> üründen{' '}
+                    <span className="font-bold text-slate-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> -{' '}
+                    <span className="font-bold text-slate-900">{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</span> arası gösteriliyor
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      title="Önceki Sayfa"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Only show current, first, last, and near pages for clean UI
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-9 h-9 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                              currentPage === page
+                                ? 'bg-slate-900 text-white shadow-sm'
+                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (
+                        (page === 2 && currentPage > 3) ||
+                        (page === totalPages - 1 && currentPage < totalPages - 2)
+                      ) {
+                        return (
+                          <span key={page} className="px-1 text-slate-400 font-bold text-xs">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      title="Sonraki Sayfa"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

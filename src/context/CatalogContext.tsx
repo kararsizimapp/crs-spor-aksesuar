@@ -27,14 +27,20 @@ import {
 import { generateSlug } from '../utils/formatters';
 import { CSVRowProduct } from '../utils/csv';
 
+export interface CartItem {
+  product: Product;
+  quantity: number;
+  selectedPriceType: 'vat_excl' | 'vat_incl';
+}
+
 interface CatalogContextType {
   products: Product[];
   categories: Category[];
   quotes: QuoteRequest[];
   settings: GeneralSettings;
   currentUser: User | null;
-  activeTab: 'home' | 'products' | 'categories' | 'admin';
-  setActiveTab: (tab: 'home' | 'products' | 'categories' | 'admin') => void;
+  activeTab: 'home' | 'products' | 'categories' | 'flipbook' | 'admin';
+  setActiveTab: (tab: 'home' | 'products' | 'categories' | 'flipbook' | 'admin') => void;
   selectedCategory: string | null;
   setSelectedCategory: (catId: string | null) => void;
   selectedSubcategory: string | null;
@@ -47,6 +53,15 @@ interface CatalogContextType {
   setQuoteModalProduct: (p: Product | null) => void;
   lightboxImage: string | null;
   setLightboxImage: (img: string | null) => void;
+
+  // Quote Basket State & Actions
+  cartItems: CartItem[];
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
+  addToCart: (product: Product, quantity?: number) => void;
+  removeFromCart: (productId: string) => void;
+  updateCartQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
 
   // Product Actions
   addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -96,7 +111,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return null;
   });
 
-  const [activeTab, setActiveTab] = useState<'home' | 'products' | 'categories' | 'admin'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'products' | 'categories' | 'flipbook' | 'admin'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -104,6 +119,60 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [quoteModalProduct, setQuoteModalProduct] = useState<Product | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Quote Basket State
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('crs_quote_basket');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return [];
+  });
+  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('crs_quote_basket', JSON.stringify(cartItems));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [cartItems]);
+
+  const addToCart = (product: Product, quantity: number = 1) => {
+    setCartItems(prev => {
+      const existingIndex = prev.findIndex(item => item.product.id === product.id);
+      if (existingIndex > -1) {
+        const updated = [...prev];
+        updated[existingIndex].quantity += quantity;
+        return updated;
+      }
+      return [...prev, { product, quantity, selectedPriceType: 'vat_incl' }];
+    });
+    showNotification(`"${product.name}" teklif sepetinize eklendi.`, 'success');
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCartItems(prev => prev.filter(item => item.product.id !== productId));
+    showNotification('Ürün teklif sepetinizden çıkarıldı.', 'info');
+  };
+
+  const updateCartQuantity = (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+    setCartItems(prev =>
+      prev.map(item =>
+        item.product.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
 
   // Firestore Real-Time Listeners & Auto-Seeding
   useEffect(() => {
@@ -618,52 +687,76 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return { imported, errors };
   };
 
+  const value = React.useMemo(() => ({
+    products,
+    categories,
+    quotes,
+    settings,
+    currentUser,
+    activeTab,
+    setActiveTab,
+    selectedCategory,
+    setSelectedCategory,
+    selectedSubcategory,
+    setSelectedSubcategory,
+    searchQuery,
+    setSearchQuery,
+    selectedProductDetail,
+    setSelectedProductDetail,
+    quoteModalProduct,
+    setQuoteModalProduct,
+    lightboxImage,
+    setLightboxImage,
+    cartItems,
+    isCartOpen,
+    setIsCartOpen,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+    clearCart,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    deleteProductsBulk,
+    duplicateProduct,
+    togglePublishProduct,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    addSubcategory,
+    deleteSubcategory,
+    addQuoteRequest,
+    updateQuoteStatus,
+    deleteQuoteRequest,
+    updateSettings,
+    resetToDemoData,
+    loginAdmin,
+    logoutAdmin,
+    importProductsBulk,
+    notification,
+    showNotification,
+    isFirebaseConnected,
+  }), [
+    products,
+    categories,
+    quotes,
+    settings,
+    currentUser,
+    activeTab,
+    selectedCategory,
+    selectedSubcategory,
+    searchQuery,
+    selectedProductDetail,
+    quoteModalProduct,
+    lightboxImage,
+    notification,
+    isFirebaseConnected,
+    cartItems,
+    isCartOpen,
+  ]);
+
   return (
-    <CatalogContext.Provider
-      value={{
-        products,
-        categories,
-        quotes,
-        settings,
-        currentUser,
-        activeTab,
-        setActiveTab,
-        selectedCategory,
-        setSelectedCategory,
-        selectedSubcategory,
-        setSelectedSubcategory,
-        searchQuery,
-        setSearchQuery,
-        selectedProductDetail,
-        setSelectedProductDetail,
-        quoteModalProduct,
-        setQuoteModalProduct,
-        lightboxImage,
-        setLightboxImage,
-        addProduct,
-        updateProduct,
-        deleteProduct,
-        deleteProductsBulk,
-        duplicateProduct,
-        togglePublishProduct,
-        addCategory,
-        updateCategory,
-        deleteCategory,
-        addSubcategory,
-        deleteSubcategory,
-        addQuoteRequest,
-        updateQuoteStatus,
-        deleteQuoteRequest,
-        updateSettings,
-        resetToDemoData,
-        loginAdmin,
-        logoutAdmin,
-        importProductsBulk,
-        notification,
-        showNotification,
-        isFirebaseConnected,
-      }}
-    >
+    <CatalogContext.Provider value={value}>
       {children}
     </CatalogContext.Provider>
   );

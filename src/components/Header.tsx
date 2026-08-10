@@ -8,6 +8,8 @@ import {
   UserCheck,
   ShieldCheck,
   ChevronRight,
+  BookOpen,
+  ShoppingBag,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -19,11 +21,14 @@ export const Header: React.FC = () => {
     currentUser,
     setSelectedCategory,
     setSelectedSubcategory,
+    cartItems,
+    setIsCartOpen,
   } = useCatalog();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  const handleNav = (tab: 'home' | 'products' | 'categories' | 'admin') => {
+  const handleNav = (tab: 'home' | 'products' | 'categories' | 'flipbook' | 'admin') => {
     setActiveTab(tab);
     setMobileMenuOpen(false);
   };
@@ -129,7 +134,33 @@ export const Header: React.FC = () => {
               >
                 Kategoriler
               </button>
+
+              <button
+                onClick={() => handleNav('flipbook')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'flipbook'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>E-Katalog</span>
+              </button>
             </nav>
+
+            {/* Teklif Sepetim Button */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+            >
+              <ShoppingBag className="w-4 h-4 text-red-500" />
+              <span className="hidden lg:inline">Teklif Sepetim</span>
+              {totalCartCount > 0 && (
+                <span className="bg-red-600 text-white text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full animate-bounce">
+                  {totalCartCount}
+                </span>
+              )}
+            </button>
 
             <button
               onClick={() => handleNav('admin')}
@@ -186,6 +217,35 @@ export const Header: React.FC = () => {
           >
             <span>Kategoriler</span>
             <ChevronRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleNav('flipbook')}
+            className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between ${
+              activeTab === 'flipbook' ? 'bg-red-600 text-white' : 'text-slate-800 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span>E-Katalog / Flipbook</span>
+            </div>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              setIsCartOpen(true);
+              setMobileMenuOpen(false);
+            }}
+            className="w-full text-left px-4 py-3 rounded-xl text-sm font-extrabold bg-slate-900 text-white flex items-center justify-between shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-red-500" />
+              <span>Teklif Sepetim</span>
+            </div>
+            {totalCartCount > 0 && (
+              <span className="bg-red-600 text-white text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+                {totalCartCount} Ürün
+              </span>
+            )}
           </button>
           <button
             onClick={() => handleNav('admin')}
