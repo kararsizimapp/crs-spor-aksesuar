@@ -1,6 +1,6 @@
 {
-  "name": "SCUCS Dijital Ürün Kataloğu",
-  "description": "SCUCS Antrenman Malzemeleri ve Spor Aksesuarları B2B Dijital Ürün Katalog ve Teklif Yönetim Sistemi",
+  "name": "CRS SPOR Dijital Katalog",
+  "description": "CRS SPOR Antrenman Malzemeleri ve Spor Aksesuarları B2B Dijital Ürün Katalog ve Teklif Yönetim Sistemi",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

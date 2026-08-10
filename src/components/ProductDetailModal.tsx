@@ -101,24 +101,24 @@ export const ProductDetailModal: React.FC = () => {
 
         {/* Modal Main Body - Single Screen Layout */}
         <div className="p-4 sm:p-5 overflow-y-auto flex-1 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:items-stretch">
             
             {/* LEFT COLUMN: Main Image */}
-            <div className="space-y-3">
-              {/* Main Image */}
-              <div className="relative bg-slate-50 border border-slate-200 rounded-xl overflow-hidden aspect-square max-h-72 w-full group flex items-center justify-center p-3">
+            <div className="h-full flex flex-col">
+              {/* Main Image Container (expands vertically with right column) */}
+              <div className="relative bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden min-h-[280px] h-full flex-1 w-full group flex items-center justify-center p-4">
                 <img
                   src={currentImage}
                   alt={product.name}
-                  className="w-full h-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-full max-h-[500px] object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
                 />
 
                 <button
                   onClick={() => setLightboxImage(currentImage)}
-                  className="absolute bottom-2.5 right-2.5 bg-slate-900/80 hover:bg-slate-900 text-white p-1.5 rounded-lg backdrop-blur-xs transition-colors cursor-pointer shadow-md"
+                  className="absolute bottom-3 right-3 bg-slate-900/80 hover:bg-slate-900 text-white p-2 rounded-xl backdrop-blur-xs transition-colors cursor-pointer shadow-md"
                   title="Görseli Büyüt"
                 >
-                  <Maximize2 className="w-3.5 h-3.5" />
+                  <Maximize2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -129,7 +129,7 @@ export const ProductDetailModal: React.FC = () => {
               <div>
                 {/* Brand Name (small text, top-left of title) */}
                 {product.brand && (
-                  <div className="text-xs font-black text-amber-600 uppercase tracking-wider mb-0.5">
+                  <div className="text-xs font-black text-slate-900 uppercase tracking-wider mb-0.5">
                     {product.brand}
                   </div>
                 )}

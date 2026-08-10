@@ -43,11 +43,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             {/* Brand (left) and SKU (right) above Title */}
             <div className="flex items-center justify-between gap-2 mb-2">
               {product.brand ? (
-                <span className="text-xs font-black text-amber-600 uppercase tracking-wider">
+                <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
                   {product.brand}
                 </span>
               ) : <div />}
-              <span className="bg-slate-950 text-teal-300 font-mono font-black text-xs px-2.5 py-1 rounded-md border border-slate-800 shadow-xs tracking-wider shrink-0">
+              <span className="bg-slate-950 text-red-400 font-mono font-black text-xs px-2.5 py-1 rounded-md border border-slate-800 shadow-xs tracking-wider shrink-0">
                 {product.sku}
               </span>
             </div>
@@ -55,7 +55,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             {/* Product Title */}
             <h3 
               onClick={() => setSelectedProductDetail(product)}
-              className="text-base sm:text-lg font-black text-slate-900 group-hover:text-teal-600 cursor-pointer transition-colors line-clamp-2 leading-snug mb-3 uppercase"
+              className="text-base sm:text-lg font-black text-slate-900 group-hover:text-red-600 cursor-pointer transition-colors line-clamp-2 leading-snug mb-3 uppercase"
               title={product.name}
             >
               {product.name}
@@ -85,7 +85,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
           <div className="flex items-center justify-end pt-3 border-t border-slate-100 mt-2">
             <button
               onClick={() => setSelectedProductDetail(product)}
-              className="px-5 py-2.5 text-xs font-black rounded-xl bg-slate-900 text-white hover:bg-teal-600 transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+              className="px-5 py-2.5 text-xs font-black rounded-xl bg-slate-900 text-white hover:bg-red-600 transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
             >
               <span>Ürünü İncele</span>
               <ArrowRight className="w-4 h-4" />
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
 
         {/* Overlay hover effect */}
         <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <span className="bg-slate-900 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-lg">
+          <span className="bg-red-600 text-white text-xs font-black px-3.5 py-2 rounded-xl shadow-lg">
             Hızlı İncele
           </span>
         </div>
@@ -145,18 +145,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
           <div className="mb-2">
             <div className="flex items-center justify-between gap-1.5 mb-1">
               {product.brand ? (
-                <span className="text-[11px] font-black text-amber-600 uppercase tracking-wider truncate">
+                <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider truncate">
                   {product.brand}
                 </span>
               ) : <div />}
-              <span className="bg-slate-950 text-teal-300 font-mono font-black text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md border border-slate-800 shadow-2xs tracking-wider shrink-0">
+              <span className="bg-slate-950 text-red-400 font-mono font-black text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md border border-slate-800 shadow-2xs tracking-wider shrink-0">
                 {product.sku}
               </span>
             </div>
             <div className="min-h-[2.5rem] flex items-center">
               <h3 
                 onClick={() => setSelectedProductDetail(product)}
-                className="text-xs sm:text-sm font-black text-slate-900 hover:text-teal-600 cursor-pointer transition-colors line-clamp-2 leading-snug uppercase tracking-tight"
+                className="text-xs sm:text-sm font-black text-slate-900 hover:text-red-600 cursor-pointer transition-colors line-clamp-2 leading-snug uppercase tracking-tight"
                 title={product.name}
               >
                 {product.name}
@@ -169,7 +169,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         <div className="pt-3 border-t border-slate-100 mt-auto">
           <button
             onClick={() => setSelectedProductDetail(product)}
-            className="w-full py-2.5 px-3 text-xs font-black rounded-xl bg-slate-900 hover:bg-teal-600 text-white transition-all shadow-xs hover:shadow-md flex items-center justify-center gap-1.5 cursor-pointer group-hover:bg-teal-600"
+            className="w-full py-2.5 px-3 text-xs font-black rounded-xl bg-slate-900 hover:bg-red-600 text-white transition-all shadow-xs hover:shadow-md flex items-center justify-center gap-1.5 cursor-pointer group-hover:bg-red-600"
           >
             <span>Ürünü İncele</span>
             <ArrowRight className="w-3.5 h-3.5" />

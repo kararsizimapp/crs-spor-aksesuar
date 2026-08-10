@@ -29,7 +29,7 @@ export const HomePage: React.FC = () => {
         <section>
           <div className="flex items-center justify-between mb-8">
             <div>
-              <span className="text-teal-600 text-xs font-mono font-bold uppercase tracking-wider">
+              <span className="text-red-600 text-xs font-mono font-bold uppercase tracking-wider">
                 Ürün Gruplarımız
               </span>
               <h2 className="text-2xl font-black text-slate-900">Popüler Kategoriler</h2>
@@ -50,7 +50,7 @@ export const HomePage: React.FC = () => {
                 <div
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id)}
-                  className="bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs hover:shadow-md hover:border-teal-500 transition-all cursor-pointer group flex flex-col justify-between"
+                  className="bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs hover:shadow-md hover:border-red-500 transition-all cursor-pointer group flex flex-col justify-between"
                 >
                   <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden mb-2.5 relative">
                     <img
@@ -60,7 +60,7 @@ export const HomePage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-slate-900 text-xs group-hover:text-teal-600 truncate">
+                    <h4 className="font-extrabold text-slate-900 text-xs group-hover:text-red-600 truncate">
                       {cat.name}
                     </h4>
                     <span className="text-[11px] text-slate-500 font-medium">
@@ -77,7 +77,7 @@ export const HomePage: React.FC = () => {
         <section>
           <div className="flex items-center justify-between mb-8">
             <div>
-              <span className="text-teal-600 text-xs font-mono font-bold uppercase tracking-wider">
+              <span className="text-red-600 text-xs font-mono font-bold uppercase tracking-wider">
                 Seçkin Ekipmanlar
               </span>
               <h2 className="text-2xl font-black text-slate-900">Öne Çıkan Ürünler</h2>

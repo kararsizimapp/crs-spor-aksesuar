@@ -115,10 +115,10 @@ export const ProductsPage: React.FC = () => {
       {/* Title & Page Header */}
       <div className="bg-slate-950 text-white p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <span className="text-teal-400 text-xs font-mono font-bold uppercase tracking-wider">
-            SCUCS B2B Katalog
+          <span className="text-red-500 text-xs font-mono font-bold uppercase tracking-wider">
+            Ürün Kataloğu
           </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">
+          <h1 className="text-2xl sm:text-3xl font-black text-white mt-0.5">
             {currentCategoryObj ? currentCategoryObj.name : 'Tüm Antrenman Ekipmanları'}
           </h1>
           <p className="text-slate-400 text-xs mt-1">
@@ -130,10 +130,10 @@ export const ProductsPage: React.FC = () => {
         <div className="w-full md:w-96 relative">
           <input
             type="text"
-            placeholder="Ürün adı veya SCX ürün koduna göre ara..."
+            placeholder="Ürün adı, Stok Kodu (SKU) veya kategori ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-400 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
+            className="w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
         </div>
