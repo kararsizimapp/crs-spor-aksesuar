@@ -11,4 +11,12 @@ export const db = getFirestore(app, appletConfig.firestoreDatabaseId || '(defaul
 export const storage = getStorage(app, firebaseConfig.storageBucket || appletConfig.storageBucket);
 export const auth = getAuth(app);
 
+if (typeof window !== 'undefined') {
+  console.log('[Firebase App Initialized]:', {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    storageBucket: firebaseConfig.storageBucket,
+  });
+}
+
 export default app;
