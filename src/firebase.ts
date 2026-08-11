@@ -7,7 +7,7 @@ import appletConfig from '../firebase-applet-config.json';
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-export const db = getFirestore(app, appletConfig.firestoreDatabaseId || '(default)');
+export const db = getFirestore(app);
 export const storage = getStorage(app, firebaseConfig.storageBucket || appletConfig.storageBucket);
 export const auth = getAuth(app);
 
