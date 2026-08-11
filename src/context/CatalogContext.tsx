@@ -225,8 +225,9 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       },
       (err) => {
-        console.error('Firestore Products Error:', err);
+        console.warn('Firestore Products Error (quota or network): using local cache fallback', err);
         setIsFirebaseConnected(false);
+        setProducts(INITIAL_PRODUCTS);
       }
     );
 
@@ -250,7 +251,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setCategories(loadedCategories);
         }
       },
-      (err) => console.error('Firestore Categories Error:', err)
+      (err) => {
+        console.warn('Firestore Categories Error (quota or network): using local cache fallback', err);
+        setIsFirebaseConnected(false);
+        setCategories(INITIAL_CATEGORIES);
+      }
     );
 
     // Quotes Listener
@@ -274,7 +279,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setQuotes(loadedQuotes);
         }
       },
-      (err) => console.error('Firestore Quotes Error:', err)
+      (err) => {
+        console.warn('Firestore Quotes Error (quota or network): using local cache fallback', err);
+        setIsFirebaseConnected(false);
+        setQuotes(INITIAL_QUOTES);
+      }
     );
 
     // Settings Listener
@@ -291,7 +300,11 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setSettings(docSnap.data() as GeneralSettings);
         }
       },
-      (err) => console.error('Firestore Settings Error:', err)
+      (err) => {
+        console.warn('Firestore Settings Error (quota or network): using local cache fallback', err);
+        setIsFirebaseConnected(false);
+        setSettings(DEFAULT_SETTINGS);
+      }
     );
 
     return () => {

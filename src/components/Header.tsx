@@ -49,18 +49,11 @@ export const Header: React.FC = () => {
             <div
               onClick={() => handleNav('home')}
               className="cursor-pointer flex items-center gap-3 group py-1"
+              title="CRS SPOR Ana Sayfa"
             >
               <div className="flex items-center tracking-tight">
                 <span className="text-2xl sm:text-3xl font-black text-slate-900 font-sans tracking-tighter group-hover:text-slate-800 transition-colors">CRS</span>
                 <span className="text-2xl sm:text-3xl font-black text-red-600 font-sans tracking-tight ml-1.5 group-hover:text-red-700 transition-colors">SPOR</span>
-              </div>
-              <div className="hidden sm:block pl-3 border-l-2 border-slate-200">
-                <span className="text-[10px] font-mono font-black text-slate-800 uppercase tracking-widest block">
-                  ONLINE KATALOG
-                </span>
-                <div className="text-[10px] text-slate-500 font-bold tracking-wider uppercase">
-                  SPOR EKİPMANLARI
-                </div>
               </div>
             </div>
 
@@ -76,7 +69,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Expanded Search Bar */}
-          <div className="w-full md:flex-1 md:max-w-2xl px-0 md:px-4">
+          <div className="w-full md:flex-1 px-0 md:px-2">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
               <input
                 type="text"
@@ -100,11 +93,11 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Desktop Navigation & Admin Link */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-1.5">
             <nav className="flex items-center space-x-1">
               <button
                 onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); handleNav('home'); }}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                className={`px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   activeTab === 'home'
                     ? 'bg-red-600 text-white shadow-md'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
@@ -115,7 +108,7 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={() => handleNav('products')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                className={`px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   activeTab === 'products'
                     ? 'bg-red-600 text-white shadow-md'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
@@ -126,7 +119,7 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={() => handleNav('categories')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                className={`px-3 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   activeTab === 'categories'
                     ? 'bg-red-600 text-white shadow-md'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
@@ -137,7 +130,7 @@ export const Header: React.FC = () => {
 
               <button
                 onClick={() => handleNav('flipbook')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
                   activeTab === 'flipbook'
                     ? 'bg-red-600 text-white shadow-md'
                     : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
@@ -148,23 +141,25 @@ export const Header: React.FC = () => {
               </button>
             </nav>
 
-            {/* Teklif Sepetim Button */}
+            {/* Teklif Sepetim Icon Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+              title="Teklif Sepetim"
+              className="relative p-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all flex items-center justify-center cursor-pointer shadow-sm hover:shadow-md border border-slate-800"
             >
-              <ShoppingBag className="w-4 h-4 text-red-500" />
-              <span className="hidden lg:inline">Teklif Sepetim</span>
+              <ShoppingBag className="w-5 h-5 text-red-500" />
               {totalCartCount > 0 && (
-                <span className="bg-red-600 text-white text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full animate-bounce">
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-mono font-black px-1.5 py-0.2 rounded-full ring-2 ring-white animate-bounce">
                   {totalCartCount}
                 </span>
               )}
             </button>
 
+            {/* Yönetim Icon Button */}
             <button
               onClick={() => handleNav('admin')}
-              className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border ${
+              title={currentUser ? 'Yönetim Paneli' : 'Yönetici Girişi'}
+              className={`p-2.5 rounded-xl transition-all flex items-center justify-center cursor-pointer border ${
                 activeTab === 'admin'
                   ? 'bg-slate-950 text-white border-slate-900 shadow-md'
                   : currentUser
@@ -173,15 +168,9 @@ export const Header: React.FC = () => {
               }`}
             >
               {currentUser ? (
-                <>
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  Yönetim
-                </>
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
               ) : (
-                <>
-                  <UserCheck className="w-4 h-4 text-slate-600" />
-                  Yönetici Girişi
-                </>
+                <UserCheck className="w-5 h-5 text-slate-700" />
               )}
             </button>
           </div>

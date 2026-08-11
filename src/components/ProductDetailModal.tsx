@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCatalog } from '../context/CatalogContext';
-import { formatPrice, calculateTaxPrices } from '../utils/formatters';
+import { formatPrice, calculateTaxPrices, getProductImage } from '../utils/formatters';
 import {
   X,
   Maximize2,
@@ -44,7 +44,7 @@ export const ProductDetailModal: React.FC = () => {
     ])
   ).filter(Boolean);
 
-  const currentImage = allImages[activeImageIndex] || product.coverImage;
+  const currentImage = allImages[activeImageIndex] || getProductImage(product);
 
   const handleShare = () => {
     if (navigator.share) {

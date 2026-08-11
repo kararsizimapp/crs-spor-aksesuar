@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useCatalog } from '../../context/CatalogContext';
 import { Product } from '../../types';
-import { formatPrice } from '../../utils/formatters';
+import { formatPrice, getProductImage } from '../../utils/formatters';
 import {
   Search,
   PlusCircle,
@@ -458,7 +458,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
                             title="Hızlı Görsel Yükle / Değiştir"
                           >
                             <img
-                              src={p.coverImage}
+                              src={getProductImage(p)}
                               alt={p.name}
                               className="w-10 h-10 object-cover rounded-lg border border-slate-200 flex-shrink-0 group-hover:brightness-75 transition-all"
                             />

@@ -86,3 +86,15 @@ export function generateWhatsappLink(phone: string, productName: string, product
   const encodedMessage = encodeURIComponent(message);
   return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
 }
+
+export function getProductImage(product?: { coverImage?: string; images?: string[] } | null): string {
+  if (!product) return 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80';
+  if (product.coverImage && product.coverImage.trim() !== '') {
+    return product.coverImage;
+  }
+  if (product.images && Array.isArray(product.images) && product.images.length > 0 && product.images[0] && product.images[0].trim() !== '') {
+    return product.images[0];
+  }
+  return 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80';
+}
+

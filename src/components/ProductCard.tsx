@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product } from '../types';
-import { formatPrice, calculateTaxPrices } from '../utils/formatters';
+import { formatPrice, calculateTaxPrices, getProductImage } from '../utils/formatters';
 import { useCatalog } from '../context/CatalogContext';
 import { ArrowRight, Award, ShoppingBag } from 'lucide-react';
 
@@ -30,7 +30,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
           className="relative w-full sm:w-64 h-48 sm:h-auto bg-slate-100 overflow-hidden flex-shrink-0 cursor-pointer"
         >
           <img
-            src={product.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80'}
+            src={getProductImage(product)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
@@ -113,7 +113,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         className="relative aspect-4/3 bg-slate-100 overflow-hidden cursor-pointer flex items-center justify-center p-2"
       >
         <img
-          src={product.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80'}
+          src={getProductImage(product)}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-xl"
           loading="lazy"
