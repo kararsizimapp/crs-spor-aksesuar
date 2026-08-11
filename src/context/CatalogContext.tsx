@@ -370,7 +370,9 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     showNotification(`"${newProduct.name}" ürünü kaydediliyor...`);
 
     try {
-      await setDoc(doc(db, 'products', id), sanitizeForFirestore(newProduct));
+      const setDocPromise = setDoc(doc(db, 'products', id), sanitizeForFirestore(newProduct));
+      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 2000));
+      await Promise.race([setDocPromise, timeoutPromise]);
       showNotification(`"${newProduct.name}" canlı veritabanına eklendi (herkes tarafından görülebilir).`);
     } catch (err) {
       console.error('Error adding product to Firestore:', err);
@@ -399,7 +401,9 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setProducts((prev) => prev.map((p) => (p.id === id ? updatedProduct : p)));
 
     try {
-      await setDoc(doc(db, 'products', id), sanitizeForFirestore(updatedProduct));
+      const setDocPromise = setDoc(doc(db, 'products', id), sanitizeForFirestore(updatedProduct));
+      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 2000));
+      await Promise.race([setDocPromise, timeoutPromise]);
       showNotification('Ürün canlı veritabanında güncellendi.');
     } catch (err) {
       console.error('Error updating product in Firestore:', err);

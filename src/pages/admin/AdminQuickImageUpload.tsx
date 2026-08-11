@@ -97,12 +97,21 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
 
       // Rule 8: Delete old image if replacing
       if (oldCover && oldCover !== downloadURL && oldCover.includes('firebasestorage')) {
-        await deleteProductImageFromStorage(oldCover);
+        await deleteProductImageFromStorage(oldCover).catch(() => {});
       }
 
       setCoverImage(downloadURL);
       setUploadProgress(100);
-      showNotification('Ürün resmi Firebase Storage\'a başarıyla yüklendi.');
+
+      // Auto-save to product in Firestore & CatalogContext immediately
+      await updateProduct(currentProduct.id, {
+        coverImage: downloadURL,
+        imageUrl: downloadURL,
+        images: [downloadURL].filter(Boolean),
+        gallery: [],
+      });
+
+      showNotification('Ürün resmi Firebase Storage’a başarıyla yüklendi ve kaydedildi.');
     } catch (err: any) {
       console.error('File upload error:', err);
       const errMsg = err?.message || 'Resim Firebase Storage’a yüklenirken bir hata oluştu.';
@@ -115,13 +124,19 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
   };
 
   // Add via URL input
-  const handleAddUrl = () => {
+  const handleAddUrl = async () => {
     const url = imageUrlInput.trim();
     if (!url) return;
 
     setCoverImage(url);
     setImageUrlInput('');
-    showNotification('Resim bağlantısı eklendi.');
+    await updateProduct(currentProduct.id, {
+      coverImage: url,
+      imageUrl: url,
+      images: [url].filter(Boolean),
+      gallery: [],
+    });
+    showNotification('Resim bağlantısı eklendi ve ürün kaydedildi.');
   };
 
   // Save changes
@@ -366,10 +381,13 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
               type="button"
               onClick={() => handleSave(true)}
               disabled={isSaving}
-              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-teal-300 font-bold text-xs rounded-xl transition-all cursor-pointer border border-slate-800 flex items-center gap-1.5"
+              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-teal-300 font-bold text-xs rounded-xl transition-all cursor-pointer border border-slate-800 flex items-center gap-1.5 disabled:opacity-70"
             >
               {isSaving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-teal-300" />
+                  <span>Kaydediliyor...</span>
+                </>
               ) : (
                 <>
                   <span>Kaydet & Sonrakine Geç</span>
@@ -382,10 +400,13 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
               type="button"
               onClick={() => handleSave(false)}
               disabled={isSaving}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-900/20 cursor-pointer transition-all flex items-center gap-1.5"
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-900/20 cursor-pointer transition-all flex items-center gap-1.5 disabled:opacity-70"
             >
               {isSaving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Kaydediliyor...</span>
+                </>
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4" />
