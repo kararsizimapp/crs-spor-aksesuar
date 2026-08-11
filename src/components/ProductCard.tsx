@@ -1,8 +1,8 @@
 import React from 'react';
 import { Product } from '../types';
-import { formatPrice, calculateTaxPrices, getProductImage } from '../utils/formatters';
+import { formatPrice, calculateTaxPrices, getProductImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import { useCatalog } from '../context/CatalogContext';
-import { ArrowRight, Award, ShoppingBag } from 'lucide-react';
+import { ArrowRight, ShoppingBag } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -35,6 +35,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
             decoding="async"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+            }}
           />
         </div>
 
@@ -118,6 +123,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-xl"
           loading="lazy"
           decoding="async"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+          }}
         />
 
         {/* Overlay hover effect */}

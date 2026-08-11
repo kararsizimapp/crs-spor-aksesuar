@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCatalog } from '../context/CatalogContext';
+import { getProductImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import { X, Send, Building, User, Phone, Mail, MapPin, Hash, Package } from 'lucide-react';
 
 export const QuoteModal: React.FC = () => {
@@ -84,9 +85,14 @@ export const QuoteModal: React.FC = () => {
         {/* Selected Product Summary Box */}
         <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-3">
           <img
-            src={quoteModalProduct.coverImage}
+            src={getProductImage(quoteModalProduct)}
             alt={quoteModalProduct.name}
             className="w-14 h-14 object-cover rounded-lg border border-slate-200 flex-shrink-0"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+            }}
           />
           <div className="flex-1 min-w-0">
             <span className="bg-teal-700 text-teal-50 font-mono text-[11px] font-bold px-2 py-0.5 rounded">

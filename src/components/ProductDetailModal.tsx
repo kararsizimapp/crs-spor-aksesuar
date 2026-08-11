@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCatalog } from '../context/CatalogContext';
-import { formatPrice, calculateTaxPrices, getProductImage } from '../utils/formatters';
+import { formatPrice, calculateTaxPrices, getProductImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import {
   X,
   Maximize2,
@@ -117,6 +117,11 @@ export const ProductDetailModal: React.FC = () => {
                   src={currentImage}
                   alt={product.name}
                   className="w-full h-full max-h-[500px] object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                  }}
                 />
 
                 <button

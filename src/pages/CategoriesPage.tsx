@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCatalog } from '../context/CatalogContext';
+import { getCategoryImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import { Layers, ChevronRight, PackageCheck } from 'lucide-react';
 
 export const CategoriesPage: React.FC = () => {
@@ -49,9 +50,14 @@ export const CategoriesPage: React.FC = () => {
                   className="relative h-44 bg-slate-100 overflow-hidden cursor-pointer"
                 >
                   <img
-                    src={cat.image || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80'}
+                    src={getCategoryImage(cat)}
                     alt={cat.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
                   

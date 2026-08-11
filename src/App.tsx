@@ -32,6 +32,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
+  Loader2,
 } from 'lucide-react';
 
 type AdminTab = 'dashboard' | 'products' | 'categories' | 'quotes' | 'bulk' | 'settings' | 'add-product' | 'edit-product';
@@ -41,6 +42,7 @@ const AppContent: React.FC = () => {
     activeTab,
     setActiveTab,
     currentUser,
+    isAuthLoading,
     logoutAdmin,
     notification,
   } = useCatalog();
@@ -102,7 +104,14 @@ const AppContent: React.FC = () => {
 
         {activeTab === 'admin' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-            {!currentUser ? (
+            {isAuthLoading ? (
+              <div className="min-h-[50vh] flex items-center justify-center">
+                <div className="flex flex-col items-center space-y-3 text-slate-500">
+                  <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+                  <span className="text-xs font-semibold">Oturum durumu kontrol ediliyor...</span>
+                </div>
+              </div>
+            ) : !currentUser ? (
               <AdminLogin />
             ) : (
               <div className="space-y-6">

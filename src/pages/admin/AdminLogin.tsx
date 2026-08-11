@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
 import { useCatalog } from '../../context/CatalogContext';
-import { Lock, Mail, ShieldCheck, KeyRound, Sparkles } from 'lucide-react';
+import { Lock, Mail, ShieldCheck, KeyRound, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 
 export const AdminLogin: React.FC = () => {
   const { loginAdmin } = useCatalog();
-  const [email, setEmail] = useState('admin@scucs.com');
-  const [password, setPassword] = useState('scucs123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    loginAdmin(email, password);
+    if (!email.trim() || !password) return;
+
+    setErrorMessage(null);
+    setIsLoading(true);
+
+    const result = await loginAdmin(email, password);
+    setIsLoading(false);
+
+    if (!result.success && result.error) {
+      setErrorMessage(result.error);
+    }
   };
 
   return (
@@ -21,20 +33,40 @@ export const AdminLogin: React.FC = () => {
           </div>
           <h2 className="text-2xl font-black text-white">Yönetici Girişi</h2>
           <p className="text-slate-400 text-xs">
-            SCUCS B2B Katalog Yönetim Paneline Erişim
+            Firebase Authentication ile Yönetim Paneline Erişim
           </p>
         </div>
 
-        {/* Demo Hint Banner */}
+        {/* Info Banner */}
         <div className="bg-teal-950/60 border border-teal-500/30 rounded-xl p-3.5 text-xs text-teal-300 flex items-start gap-2.5">
           <KeyRound className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
           <div>
-            <strong className="block font-bold text-white mb-0.5">Demo Yönetici Bilgileri:</strong>
-            <span>E-Posta: <code className="bg-slate-900 px-1 rounded text-teal-200">admin@scucs.com</code></span>
-            <br />
-            <span>Şifre: <code className="bg-slate-900 px-1 rounded text-teal-200">scucs123</code></span>
+            <strong className="block font-bold text-white mb-0.5">Firebase Yönetici Girişi:</strong>
+            <span>Lütfen Firebase Console'da Authentication bölümünde tanımladığınız e-posta ve şifre ile giriş yapınız.</span>
           </div>
         </div>
+
+        {errorMessage && (
+          <div className="bg-red-950/90 border border-red-500/50 rounded-xl p-4 text-xs text-red-200 space-y-2">
+            <div className="flex items-start gap-2.5 font-bold text-red-300">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <span>Giriş Başarısız</span>
+            </div>
+            <p className="pl-7 leading-relaxed">{errorMessage}</p>
+            {errorMessage.includes('Email/Password') && (
+              <div className="mt-3 p-3 bg-red-900/40 rounded-lg border border-red-800/60 text-[11px] text-red-100 space-y-1">
+                <strong className="block font-semibold text-white">Çözüm Adımları (Firebase Console):</strong>
+                <ol className="list-decimal pl-4 space-y-1 text-slate-200">
+                  <li><a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline text-teal-300 hover:text-teal-200">Firebase Console</a>&apos;a gidin ve projenizi açın.</li>
+                  <li>Sol menüden <strong>Build &gt; Authentication</strong> sayfasına gidin.</li>
+                  <li><strong>Sign-in method</strong> sekmesini tıklayın.</li>
+                  <li><strong>Email/Password</strong> seçeneğini düzenleyin ve <strong>Enable (Etkinleştir)</strong> yapıp kaydet butonuna basın.</li>
+                  <li>Ardından <strong>Users</strong> sekmesinden yeni bir yönetici kullanıcısı (ör. <code>admin@scucs.com</code>) ekleyin.</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -43,11 +75,13 @@ export const AdminLogin: React.FC = () => {
             </label>
             <div className="relative">
               <input
-                type="text"
+                type="email"
                 required
+                placeholder="admin@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-teal-500"
+                disabled={isLoading}
+                className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-teal-500 disabled:opacity-50"
               />
               <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
             </div>
@@ -61,9 +95,11 @@ export const AdminLogin: React.FC = () => {
               <input
                 type="password"
                 required
+                placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-teal-500"
+                disabled={isLoading}
+                className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl bg-slate-900 border border-slate-800 text-white focus:outline-none focus:border-teal-500 disabled:opacity-50"
               />
               <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
             </div>
@@ -71,10 +107,20 @@ export const AdminLogin: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-teal-900/30 flex items-center justify-center gap-2 cursor-pointer"
+            disabled={isLoading}
+            className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-teal-900/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <Sparkles className="w-4 h-4" />
-            Yönetim Paneline Giriş Yap
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Oturum Açılıyor...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Yönetim Paneline Giriş Yap</span>
+              </>
+            )}
           </button>
         </form>
       </div>

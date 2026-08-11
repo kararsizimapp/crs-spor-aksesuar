@@ -46,6 +46,7 @@ export interface Product {
   featured: boolean;
   isNew: boolean;
   coverImage: string;
+  imageUrl?: string;
   images: string[];
   colors?: string[];
   specifications: Specification[];

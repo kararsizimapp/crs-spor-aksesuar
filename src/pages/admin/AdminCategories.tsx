@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useCatalog } from '../../context/CatalogContext';
 import { Category, Subcategory } from '../../types';
-import { generateSlug } from '../../utils/formatters';
+import { generateSlug, getCategoryImage, DEFAULT_FALLBACK_IMAGE } from '../../utils/formatters';
 import { convertFileToBase64 } from '../../utils/imageUtils';
 import { Plus, Edit, Trash2, Layers, AlertTriangle, ChevronRight, FolderPlus, Upload, Loader2 } from 'lucide-react';
 
@@ -45,7 +45,7 @@ export const AdminCategories: React.FC = () => {
     setCatName('');
     setCatSlug('');
     setCatDesc('');
-    setCatImage('https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80');
+    setCatImage('https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=600&q=80');
     setIsAddingNew(true);
   };
 
@@ -66,7 +66,7 @@ export const AdminCategories: React.FC = () => {
       name: catName.trim(),
       slug: catSlug || generateSlug(catName),
       description: catDesc.trim(),
-      image: catImage || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80',
+      image: catImage || 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=600&q=80',
       sortOrder: editingCat ? editingCat.sortOrder : categories.length + 1,
       subcategories: editingCat ? editingCat.subcategories : [],
     };
@@ -228,9 +228,14 @@ export const AdminCategories: React.FC = () => {
                 <div className="p-4 bg-slate-950 text-white flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={cat.image}
+                      src={getCategoryImage(cat)}
                       alt={cat.name}
                       className="w-10 h-10 object-cover rounded-lg border border-slate-800"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                      }}
                     />
                     <div>
                       <h3 className="font-bold text-sm text-white">{cat.name}</h3>

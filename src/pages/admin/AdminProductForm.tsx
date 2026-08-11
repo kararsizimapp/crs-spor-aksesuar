@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useCatalog } from '../../context/CatalogContext';
 import { Product, ProductVariant, Specification, PriceType, StockStatus, ProductStatus } from '../../types';
-import { generateSlug } from '../../utils/formatters';
-import { convertFileToBase64 } from '../../utils/imageUtils';
+import { generateSlug, DEFAULT_FALLBACK_IMAGE } from '../../utils/formatters';
+import { uploadProductImage, deleteProductImageFromStorage } from '../../services/storageService';
 import { AdminMultiProductForm } from './AdminMultiProductForm';
 import {
   ArrowLeft,
@@ -66,9 +66,14 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
   const [setContents, setSetContents] = useState(existingProduct?.setContents || '');
   const [specifications, setSpecifications] = useState<Specification[]>(existingProduct?.specifications || []);
 
+  // Product ID for Storage path (products/{productId}/{uniqueFileName})
+  const [formProductId] = useState<string>(() => existingProduct?.id || `prod-${Date.now()}`);
+
   // Images State
-  const [coverImage, setCoverImage] = useState(existingProduct?.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=800&q=80');
+  const [coverImage, setCoverImage] = useState(existingProduct?.coverImage || 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=800&q=80');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Variants State
   const [variants, setVariants] = useState<ProductVariant[]>(existingProduct?.variants || []);
@@ -119,19 +124,37 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
     setSpecifications(copy);
   };
 
-  // Image Handlers
+  // Image Handlers (Firebase Storage)
   const handleCoverFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setUploadError(null);
+    setIsUploading(true);
+    setUploadProgress(20);
+
     try {
-      setIsUploading(true);
-      const base64 = await convertFileToBase64(file);
-      setCoverImage(base64);
-    } catch (err) {
-      console.error('Error processing cover file:', err);
-      alert('Görsel yüklenirken bir hata oluştu.');
+      const oldCover = coverImage;
+      setUploadProgress(50);
+
+      // Upload to Firebase Storage: products/{productId}/{uniqueFileName}
+      const downloadURL = await uploadProductImage(file, formProductId);
+      setUploadProgress(85);
+
+      // Rule 8: Resim değiştirilirse eski resmi silip yenisini yükle.
+      if (oldCover && oldCover !== downloadURL && oldCover.includes('firebasestorage')) {
+        await deleteProductImageFromStorage(oldCover);
+      }
+
+      setCoverImage(downloadURL);
+      setUploadProgress(100);
+    } catch (err: any) {
+      console.error('Error uploading cover file:', err);
+      const errMsg = err?.message || 'Görsel Firebase Storage’a yüklenirken bir hata oluştu.';
+      setUploadError(errMsg);
     } finally {
       setIsUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
       e.target.value = '';
     }
   };
@@ -188,6 +211,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
       featured,
       isNew,
       coverImage,
+      imageUrl: coverImage,
       images: [coverImage].filter(Boolean),
       colors: variants.map(v => v.name),
       specifications: specifications.filter(s => s.title.trim() !== ''),
@@ -567,7 +591,16 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
               <div className="flex flex-col sm:flex-row gap-4 items-start">
                 <div className="w-36 h-28 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center relative shadow-xs">
                   {coverImage ? (
-                    <img src={coverImage} alt="Görsel Önizleme" className="w-full h-full object-cover" />
+                    <img
+                      src={coverImage}
+                      alt="Görsel Önizleme"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                      }}
+                    />
                   ) : (
                     <ImageIcon className="w-8 h-8 text-slate-300" />
                   )}
@@ -576,13 +609,13 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
                 <div className="flex-1 space-y-3 w-full">
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">
-                      1. Bilgisayardan Fotoğraf Yükle
+                      1. Firebase Storage'a Fotoğraf Yükle (Maks. 5 MB)
                     </label>
                     <label className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl cursor-pointer shadow-xs transition-colors">
                       {isUploading ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Yükleniyor...</span>
+                          <span>Firebase Storage'a Yükleniyor...</span>
                         </>
                       ) : (
                         <>
@@ -592,12 +625,43 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId, o
                       )}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
                         onChange={handleCoverFileUpload}
                         className="hidden"
                         disabled={isUploading}
                       />
                     </label>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Desteklenen formatlar: <strong>JPG, JPEG, PNG, WEBP</strong> (Maksimum 5 MB)
+                    </p>
+
+                    {isUploading && (
+                      <div className="mt-3 space-y-1">
+                        <div className="flex justify-between text-[11px] font-bold text-teal-700">
+                          <span>Görsel Yükleniyor...</span>
+                          <span>%{uploadProgress}</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                          <div
+                            className="bg-teal-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {uploadError && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center justify-between">
+                        <span>{uploadError}</span>
+                        <button
+                          type="button"
+                          onClick={() => setUploadError(null)}
+                          className="text-red-500 hover:text-red-700 font-bold ml-2 cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div>

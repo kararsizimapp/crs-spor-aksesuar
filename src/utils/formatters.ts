@@ -87,14 +87,30 @@ export function generateWhatsappLink(phone: string, productName: string, product
   return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
 }
 
+export const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80';
+
 export function getProductImage(product?: { coverImage?: string; images?: string[] } | null): string {
-  if (!product) return 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80';
-  if (product.coverImage && product.coverImage.trim() !== '') {
-    return product.coverImage;
+  if (!product) return DEFAULT_FALLBACK_IMAGE;
+  
+  if (product.coverImage && typeof product.coverImage === 'string' && product.coverImage.trim() !== '') {
+    return product.coverImage.trim();
   }
-  if (product.images && Array.isArray(product.images) && product.images.length > 0 && product.images[0] && product.images[0].trim() !== '') {
-    return product.images[0];
+  
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    const firstImg = product.images[0];
+    if (firstImg && typeof firstImg === 'string' && firstImg.trim() !== '') {
+      return firstImg.trim();
+    }
   }
-  return 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80';
+
+  return DEFAULT_FALLBACK_IMAGE;
 }
+
+export function getCategoryImage(category?: { image?: string } | null): string {
+  if (category && category.image && typeof category.image === 'string' && category.image.trim() !== '') {
+    return category.image.trim();
+  }
+  return DEFAULT_FALLBACK_IMAGE;
+}
+
 

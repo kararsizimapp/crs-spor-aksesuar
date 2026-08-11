@@ -151,6 +151,6 @@ export function exportProductsToCsv(products: Product[], categories?: Category[]
 
 export function getSampleCsvTemplate(): string {
   return `\uFEFFÜrün Adı;Ürün Kodu;Kategori;Alt Kategori;Açıklama;Fiyat;Fiyat Türü;Renk;Ağırlık;Ölçüler;Malzeme;Paket Adedi;Görsel URL;Yayın Durumu
-"Antrenman Çanağı 5cm","SCX 1080","Çanak ve Huniler","","Esnek kırılmaz antrenman çanağı","12.50","Tek Fiyatı","Florasan Sarı","30g","18.5cm x 5cm","Kırılmaz Polimer","50 Adet","https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=800&q=80","Yayında"
-"Koordinasyon Merdiveni 6m","SCX 2040","Agility Ekipmanları","","6 metre uzunluğunda dayanıklı basamaklı merdiven","450.00","Tek Fiyatı","Sarı/Siyah","850g","6m x 50cm","Naylon ve PP","1 Adet","https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=800&q=80","Yayında"`;
+"Antrenman Çanağı 5cm","SCX 1080","Çanak ve Huniler","","Esnek kırılmaz antrenman çanağı","12.50","Tek Fiyatı","Florasan Sarı","30g","18.5cm x 5cm","Kırılmaz Polimer","50 Adet","https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=800&q=80","Yayında"
+"Koordinasyon Merdiveni 6m","SCX 2040","Agility Ekipmanları","","6 metre uzunluğunda dayanıklı basamaklı merdiven","450.00","Tek Fiyatı","Sarı/Siyah","850g","6m x 50cm","Naylon ve PP","1 Adet","https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=800&q=80","Yayında"`;
 }

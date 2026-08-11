@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCatalog } from '../context/CatalogContext';
-import { X, ZoomIn } from 'lucide-react';
+import { DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
+import { X } from 'lucide-react';
 
 export const LightboxModal: React.FC = () => {
   const { lightboxImage, setLightboxImage } = useCatalog();
@@ -25,6 +26,11 @@ export const LightboxModal: React.FC = () => {
           src={lightboxImage}
           alt="Görsel Büyük Önizleme"
           className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border border-slate-700/50"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+          }}
           onClick={e => e.stopPropagation()}
         />
       </div>

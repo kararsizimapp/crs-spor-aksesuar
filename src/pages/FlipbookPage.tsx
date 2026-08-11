@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useCatalog } from '../context/CatalogContext';
-import { formatCurrency, getProductImage } from '../utils/formatters';
+import { formatCurrency, getProductImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import {
   BookOpen,
   ChevronLeft,
@@ -381,6 +381,11 @@ export const FlipbookPage: React.FC = () => {
                           src={getProductImage(product)}
                           alt={product.name}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                          }}
                         />
                         <span className="absolute top-2 left-2 bg-slate-950 text-red-400 font-mono font-black text-[10px] px-2 py-0.5 rounded shadow-2xs">
                           KOD: {product.sku}

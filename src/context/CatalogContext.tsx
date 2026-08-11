@@ -8,7 +8,12 @@ import {
   writeBatch,
   getDocs,
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import { db, auth } from '../lib/firebase';
 import { sanitizeForFirestore } from '../utils/cleanUtils';
 import {
   Product,
@@ -26,6 +31,7 @@ import {
 } from '../data/initialData';
 import { generateSlug } from '../utils/formatters';
 import { CSVRowProduct } from '../utils/csv';
+import { deleteProductImageFromStorage } from '../services/storageService';
 
 export interface CartItem {
   product: Product;
@@ -86,8 +92,9 @@ interface CatalogContextType {
   // Settings & Bulk
   updateSettings: (newSettings: Partial<GeneralSettings>) => Promise<void>;
   resetToDemoData: () => Promise<void>;
-  loginAdmin: (email: string, pass: string) => boolean;
-  logoutAdmin: () => void;
+  isAuthLoading: boolean;
+  loginAdmin: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  logoutAdmin: () => Promise<void>;
   importProductsBulk: (bulkData: CSVRowProduct[]) => Promise<{ imported: number; errors: string[] }>;
   notification: { message: string; type: 'success' | 'error' | 'info' } | null;
   showNotification: (message: string, type?: 'success' | 'error' | 'info') => void;
@@ -103,13 +110,27 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [settings, setSettings] = useState<GeneralSettings>(DEFAULT_SETTINGS);
   const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(true);
 
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('scucs_admin_user');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
-    }
-    return null;
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+
+  // Follow Firebase Auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        setCurrentUser({
+          uid: fbUser.uid,
+          email: fbUser.email || '',
+          displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Yönetici',
+          role: 'admin',
+        });
+      } else {
+        setCurrentUser(null);
+      }
+      setIsAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const [activeTab, setActiveTab] = useState<'home' | 'products' | 'categories' | 'flipbook' | 'admin'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -334,9 +355,12 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     const id = `prod-${Date.now()}`;
     const now = new Date().toISOString();
+    const cover = productData.coverImage || productData.imageUrl || '';
     const newProduct: Product = {
       ...productData,
       id,
+      coverImage: cover,
+      imageUrl: cover,
       slug: productData.slug || generateSlug(`${productData.sku} ${productData.name}`),
       createdAt: now,
       updatedAt: now,
@@ -359,9 +383,13 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const target = products.find((p) => p.id === id);
     if (!target) return;
 
-    const updatedProduct = {
+    const newCover = updates.coverImage !== undefined ? updates.coverImage : (updates.imageUrl !== undefined ? updates.imageUrl : target.coverImage);
+
+    const updatedProduct: Product = {
       ...target,
       ...updates,
+      coverImage: newCover,
+      imageUrl: newCover,
       updatedAt: now,
     };
     if (updates.name || updates.sku) {
@@ -380,10 +408,27 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteProduct = async (id: string) => {
+    const target = products.find((p) => p.id === id);
+    if (target) {
+      if (target.coverImage) {
+        deleteProductImageFromStorage(target.coverImage).catch(() => {});
+      }
+      if (target.imageUrl && target.imageUrl !== target.coverImage) {
+        deleteProductImageFromStorage(target.imageUrl).catch(() => {});
+      }
+      if (target.images && Array.isArray(target.images)) {
+        for (const imgUrl of target.images) {
+          if (imgUrl !== target.coverImage && imgUrl !== target.imageUrl) {
+            deleteProductImageFromStorage(imgUrl).catch(() => {});
+          }
+        }
+      }
+    }
+
     setProducts((prev) => prev.filter((p) => p.id !== id));
     try {
       await deleteDoc(doc(db, 'products', id));
-      showNotification('Ürün başarıyla silindi.', 'info');
+      showNotification('Ürün ve resmi başarıyla silindi.', 'info');
     } catch (err) {
       console.error('Error deleting product:', err);
       showNotification('Ürün silinirken bir hata oluştu.', 'error');
@@ -393,6 +438,14 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteProductsBulk = async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
     const targetSet = new Set(ids);
+
+    const productsToDelete = products.filter((p) => targetSet.has(p.id));
+    for (const p of productsToDelete) {
+      if (p.coverImage) {
+        deleteProductImageFromStorage(p.coverImage).catch(() => {});
+      }
+    }
+
     setProducts((prev) => prev.filter((p) => !targetSet.has(p.id)));
 
     try {
@@ -610,26 +663,54 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const loginAdmin = (email: string, pass: string): boolean => {
-    if ((email === 'admin@scucs.com' && pass === 'scucs123') || (email === 'admin' && pass === 'admin')) {
-      const user: User = {
-        uid: 'admin-1',
-        email,
-        displayName: 'Yönetici',
+  const loginAdmin = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), pass);
+      const fbUser = userCredential.user;
+      setCurrentUser({
+        uid: fbUser.uid,
+        email: fbUser.email || '',
+        displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Yönetici',
         role: 'admin',
-      };
-      setCurrentUser(user);
-      showNotification('Yönetim paneline başarıyla giriş yapıldı.');
-      return true;
+      });
+      showNotification('Firebase Authentication ile yönetim paneline giriş yapıldı.');
+      return { success: true };
+    } catch (err: any) {
+      console.error('Firebase Auth Login Error:', err);
+      let errorMessage = 'Giriş yapılamadı. Lütfen e-posta ve şifrenizi kontrol edin.';
+      if (err?.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Firebase Console üzerinde "Email/Password" (E-posta/Şifre) giriş yöntemi henüz etkinleştirilmemiş. Lütfen Firebase Console > Authentication > Sign-in method sekmesinden "Email/Password" seçeneğini aktif edin.';
+      } else if (
+        err?.code === 'auth/user-not-found' ||
+        err?.code === 'auth/wrong-password' ||
+        err?.code === 'auth/invalid-credential'
+      ) {
+        errorMessage = 'E-posta adresi veya şifre hatalı.';
+      } else if (err?.code === 'auth/invalid-email') {
+        errorMessage = 'Lütfen geçerli bir e-posta adresi giriniz.';
+      } else if (err?.code === 'auth/too-many-requests') {
+        errorMessage = 'Çok fazla başarısız giriş denemesi yapıldı. Lütfen bir süre sonra tekrar deneyiniz.';
+      } else if (err?.code === 'auth/network-request-failed') {
+        errorMessage = 'İnternet bağlantısı hatası. Lütfen bağlantınızı kontrol ediniz.';
+      } else if (err?.message) {
+        errorMessage = `Giriş hatası: ${err.message}`;
+      }
+      showNotification(errorMessage, 'error');
+      return { success: false, error: errorMessage };
     }
-    showNotification('Hatalı e-posta veya şifre.', 'error');
-    return false;
   };
 
-  const logoutAdmin = () => {
-    setCurrentUser(null);
-    setActiveTab('home');
-    showNotification('Oturum kapatıldı.', 'info');
+  const logoutAdmin = async () => {
+    try {
+      await signOut(auth);
+      setCurrentUser(null);
+      setActiveTab('home');
+      showNotification('Oturum başarıyla kapatıldı.', 'info');
+    } catch (err: any) {
+      console.error('Logout error:', err);
+      setCurrentUser(null);
+      setActiveTab('home');
+    }
   };
 
   const importProductsBulk = async (bulkData: CSVRowProduct[]): Promise<{ imported: number; errors: string[] }> => {
@@ -667,8 +748,8 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: (row.status as any) || 'Yayında',
         featured: false,
         isNew: true,
-        coverImage: row.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=800&q=80',
-        images: [row.coverImage || 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=800&q=80'],
+        coverImage: row.coverImage || 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=800&q=80',
+        images: [row.coverImage || 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=800&q=80'],
         colors: row.color ? [row.color] : [],
         specifications: [
           ...(row.weight ? [{ id: 'w', title: 'Ağırlık', value: row.weight }] : []),
@@ -743,6 +824,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     deleteQuoteRequest,
     updateSettings,
     resetToDemoData,
+    isAuthLoading,
     loginAdmin,
     logoutAdmin,
     importProductsBulk,

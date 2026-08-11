@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../../types';
 import { useCatalog } from '../../context/CatalogContext';
-import { convertFileToBase64 } from '../../utils/imageUtils';
+import { uploadProductImage, deleteProductImageFromStorage } from '../../services/storageService';
+import { DEFAULT_FALLBACK_IMAGE } from '../../utils/formatters';
 import {
   Upload,
   X,
@@ -39,6 +40,7 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
   const [coverImage, setCoverImage] = useState<string>('');
   const [imageUrlInput, setImageUrlInput] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [filterMissingOnly, setFilterMissingOnly] = useState<boolean>(false);
 
@@ -78,21 +80,36 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
 
   const category = categories.find(c => c.id === currentProduct.categoryId);
 
-  // Handle local file selection
+  // Handle local file selection with Firebase Storage
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
+    setUploadProgress(25);
     try {
-      const base64 = await convertFileToBase64(file);
-      setCoverImage(base64);
-      showNotification('Ürün resmi yüklendi.');
-    } catch (err) {
+      const oldCover = coverImage;
+      setUploadProgress(50);
+
+      // Upload to products/{productId}/{uniqueFileName}
+      const downloadURL = await uploadProductImage(file, currentProduct.id);
+      setUploadProgress(85);
+
+      // Rule 8: Delete old image if replacing
+      if (oldCover && oldCover !== downloadURL && oldCover.includes('firebasestorage')) {
+        await deleteProductImageFromStorage(oldCover);
+      }
+
+      setCoverImage(downloadURL);
+      setUploadProgress(100);
+      showNotification('Ürün resmi Firebase Storage\'a başarıyla yüklendi.');
+    } catch (err: any) {
       console.error('File upload error:', err);
-      showNotification('Resim yüklenirken bir hata oluştu.', 'error');
+      const errMsg = err?.message || 'Resim Firebase Storage’a yüklenirken bir hata oluştu.';
+      showNotification(errMsg, 'error');
     } finally {
       setIsUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
       e.target.value = '';
     }
   };
@@ -113,6 +130,7 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
     try {
       await updateProduct(currentProduct.id, {
         coverImage,
+        imageUrl: coverImage,
         images: [coverImage].filter(Boolean),
         gallery: [],
       });
@@ -247,6 +265,11 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
                       src={coverImage}
                       alt="Kapak"
                       className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                      }}
                     />
                     <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
                       <button
@@ -273,10 +296,10 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
                 <label className="block p-4 border-2 border-dashed border-teal-300 hover:border-teal-500 bg-teal-50/40 hover:bg-teal-50 rounded-2xl text-center cursor-pointer transition-all group">
                   <input
                     type="file"
-                    accept="image/*"
-                    multiple
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
                     onChange={handleFileUpload}
                     className="hidden"
+                    disabled={isUploading}
                   />
                   <div className="flex flex-col items-center space-y-1">
                     <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -287,10 +310,10 @@ export const AdminQuickImageUpload: React.FC<AdminQuickImageUploadProps> = ({
                       )}
                     </div>
                     <span className="font-extrabold text-slate-800 text-xs">
-                      Bilgisayardan Resim Seç veya Sürükle
+                      {isUploading ? `Yükleniyor... (%${uploadProgress})` : 'Firebase Storage’a Resim Seç'}
                     </span>
                     <span className="text-[10px] text-slate-500">
-                      JPG, PNG, WEBP
+                      JPG, JPEG, PNG, WEBP (Maksimum 5 MB)
                     </span>
                   </div>
                 </label>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCatalog } from '../context/CatalogContext';
 import { ProductCard } from '../components/ProductCard';
+import { getCategoryImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import {
   Sparkles,
   ChevronRight,
@@ -54,9 +55,14 @@ export const HomePage: React.FC = () => {
                 >
                   <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden mb-2.5 relative">
                     <img
-                      src={cat.image}
+                      src={getCategoryImage(cat)}
                       alt={cat.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                      }}
                     />
                   </div>
                   <div>

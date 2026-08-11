@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useCatalog } from '../../context/CatalogContext';
 import { Product } from '../../types';
-import { formatPrice, getProductImage } from '../../utils/formatters';
+import { formatPrice, getProductImage, DEFAULT_FALLBACK_IMAGE } from '../../utils/formatters';
 import {
   Search,
   PlusCircle,
@@ -461,6 +461,11 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
                               src={getProductImage(p)}
                               alt={p.name}
                               className="w-10 h-10 object-cover rounded-lg border border-slate-200 flex-shrink-0 group-hover:brightness-75 transition-all"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                              }}
                             />
                             <div className="absolute inset-0 bg-slate-950/60 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Camera className="w-4 h-4 text-amber-300" />

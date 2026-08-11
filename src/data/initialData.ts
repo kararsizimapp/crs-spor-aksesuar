@@ -7,7 +7,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     name: 'Antrenman Çanakları',
     slug: 'antrenman-canaklari',
     description: 'Kırılmaz, esnek ve darbeye dayanıklı profesyonel çanak çeşitleri ve taşıma düzenekleri.',
-    image: 'https://images.unsplash.com/photo-1517649763962-0c6232661a0b?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
     sortOrder: 1,
     active: true,
     subcategories: [

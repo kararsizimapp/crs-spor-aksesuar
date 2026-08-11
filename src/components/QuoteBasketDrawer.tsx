@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCatalog } from '../context/CatalogContext';
-import { formatCurrency, getProductImage } from '../utils/formatters';
+import { formatCurrency, getProductImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import {
   ShoppingBag,
   X,
@@ -339,6 +339,11 @@ export const QuoteBasketDrawer: React.FC = () => {
                             src={getProductImage(item.product)}
                             alt={item.product.name}
                             className="w-full h-full object-contain"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                            }}
                           />
                         </div>
                         <div className="min-w-0 flex-1">
