@@ -72,6 +72,9 @@ interface CatalogContextType {
   // Product Actions
   addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
+  updateProductsBulk: (
+    updatesMap: { ids: string[]; updates: Partial<Product> } | { [id: string]: Partial<Product> }
+  ) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   deleteProductsBulk: (ids: string[]) => Promise<void>;
   duplicateProduct: (id: string) => Promise<void>;
@@ -530,21 +533,95 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const deleteCategory = async (id: string): Promise<{ success: boolean; message?: string }> => {
-    const count = products.filter((p) => p.categoryId === id).length;
-    if (count > 0) {
-      return {
-        success: false,
-        message: `Bu kategoriye ait ${count} adet ürün bulunmaktadır. Silmeden önce ürünleri başka bir kategoriye taşıyınız.`,
-      };
+  const updateProductsBulk = async (
+    updatesMap: { ids: string[]; updates: Partial<Product> } | { [id: string]: Partial<Product> }
+  ) => {
+    const now = new Date().toISOString();
+    let updatesList: { id: string; updates: Partial<Product> }[] = [];
+
+    if ('ids' in updatesMap && Array.isArray((updatesMap as any).ids)) {
+      const ids = (updatesMap as { ids: string[]; updates: Partial<Product> }).ids;
+      const updates = (updatesMap as { ids: string[]; updates: Partial<Product> }).updates;
+      updatesList = ids.map((id) => ({ id, updates }));
+    } else {
+      const map = updatesMap as { [id: string]: Partial<Product> };
+      updatesList = Object.entries(map).map(([id, updates]) => ({ id, updates }));
     }
 
+    if (updatesList.length === 0) return;
+
+    setProducts((prev) =>
+      prev.map((p) => {
+        const item = updatesList.find((u) => u.id === p.id);
+        if (!item) return p;
+        const newCover = item.updates.coverImage !== undefined ? item.updates.coverImage : (item.updates.imageUrl !== undefined ? item.updates.imageUrl : p.coverImage);
+        const updated: Product = {
+          ...p,
+          ...item.updates,
+          coverImage: newCover,
+          imageUrl: newCover,
+          updatedAt: now,
+        };
+        if (item.updates.name || item.updates.sku) {
+          updated.slug = generateSlug(`${updated.sku} ${updated.name}`);
+        }
+        return updated;
+      })
+    );
+
     try {
-      await deleteDoc(doc(db, 'categories', id));
-      showNotification('Kategori silindi.', 'info');
-      return { success: true };
+      const chunkSize = 400;
+      for (let i = 0; i < updatesList.length; i += chunkSize) {
+        const chunk = updatesList.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+        chunk.forEach(({ id, updates }) => {
+          const target = products.find((p) => p.id === id);
+          if (!target) return;
+          const newCover = updates.coverImage !== undefined ? updates.coverImage : (updates.imageUrl !== undefined ? updates.imageUrl : target.coverImage);
+          const updated: Product = {
+            ...target,
+            ...updates,
+            coverImage: newCover,
+            imageUrl: newCover,
+            updatedAt: now,
+          };
+          if (updates.name || updates.sku) {
+            updated.slug = generateSlug(`${updated.sku} ${updated.name}`);
+          }
+          batch.set(doc(db, 'products', id), sanitizeForFirestore(updated));
+        });
+        await batch.commit();
+      }
+      showNotification(`${updatesList.length} ürün başarıyla toplu güncellendi.`);
     } catch (err) {
+      console.error('Error updating products bulk:', err);
+      showNotification('Toplu güncelleme sırasında hata oluştu.', 'error');
+    }
+  };
+
+  const deleteCategory = async (id: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const affectedProducts = products.filter((p) => p.categoryId === id);
+      if (affectedProducts.length > 0) {
+        const chunkSize = 400;
+        for (let i = 0; i < affectedProducts.length; i += chunkSize) {
+          const chunk = affectedProducts.slice(i, i + chunkSize);
+          const batch = writeBatch(db);
+          chunk.forEach((p) => {
+            const ref = doc(db, 'products', p.id);
+            batch.update(ref, { categoryId: '', subcategoryId: '' });
+          });
+          await batch.commit();
+        }
+      }
+
+      await deleteDoc(doc(db, 'categories', id));
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      showNotification('Kategori ve bağlı ürün ilişkileri silindi.', 'info');
+      return { success: true };
+    } catch (err: any) {
       console.error('Error deleting category:', err);
+      showNotification('Kategori silinirken bir hata oluştu.', 'error');
       return { success: false, message: 'Kategori silinirken bir hata oluştu.' };
     }
   };
@@ -810,6 +887,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     clearCart,
     addProduct,
     updateProduct,
+    updateProductsBulk,
     deleteProduct,
     deleteProductsBulk,
     duplicateProduct,

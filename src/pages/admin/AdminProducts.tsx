@@ -29,9 +29,11 @@ import {
   Sparkles,
   Zap,
   Award,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { AdminQuickImageUpload } from './AdminQuickImageUpload';
 import { AdminQuickEditModal, QuickEditTab } from './AdminQuickEditModal';
+import { AdminBatchEditModal } from './AdminBatchEditModal';
 
 interface AdminProductsProps {
   onAddNew: () => void;
@@ -68,6 +70,10 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
   const [quickEditProductId, setQuickEditProductId] = useState<string | null>(null);
   const [quickEditTab, setQuickEditTab] = useState<QuickEditTab>('name_sku');
   const [showQuickEditModal, setShowQuickEditModal] = useState(false);
+
+  // Batch edit modal state
+  const [showBatchEditModal, setShowBatchEditModal] = useState(false);
+  const [batchEditTargetIds, setBatchEditTargetIds] = useState<string[]>([]);
 
   const openQuickEdit = (productId: string | null, tab: QuickEditTab) => {
     setQuickEditProductId(productId || (products[0]?.id || null));
@@ -188,6 +194,23 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Listeden Toplu Hızlı Düzenle (Tablo) */}
+          <button
+            onClick={() => {
+              const idsToEdit = selectedProductIds.length > 0 ? selectedProductIds : filtered.map(p => p.id);
+              setBatchEditTargetIds(idsToEdit);
+              setShowBatchEditModal(true);
+            }}
+            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-full transition-all shadow-md flex items-center gap-1.5 cursor-pointer border border-teal-500 active:scale-95"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-teal-200" />
+            <span>
+              {selectedProductIds.length > 0
+                ? `Seçilen ${selectedProductIds.length} Ürünü Listeden Toplu Düzenle`
+                : 'Listeden Toplu Hızlı Düzenle (Tablo)'}
+            </span>
+          </button>
+
           {/* Hızlı Marka */}
           <button
             onClick={() => openQuickEdit(null, 'brand')}
@@ -353,6 +376,18 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+            <button
+              onClick={() => {
+                setBatchEditTargetIds(selectedProductIds);
+                setShowBatchEditModal(true);
+              }}
+              className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+              title="Seçilen Ürünleri Toplu / Listeden Düzenle"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Toplu / Listeden Düzenle ({selectedProductIds.length})</span>
+            </button>
+
             <button
               onClick={() => handleBulkPublish(true)}
               className="px-3 py-1.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
@@ -688,6 +723,17 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
           onClose={() => {
             setShowQuickEditModal(false);
             setQuickEditProductId(null);
+          }}
+        />
+      )}
+
+      {/* Batch Edit Modal (Listeden Toplu Tablo Düzenleme & Toplu Değer Atama) */}
+      {showBatchEditModal && (
+        <AdminBatchEditModal
+          selectedIds={batchEditTargetIds}
+          onClose={() => {
+            setShowBatchEditModal(false);
+            setBatchEditTargetIds([]);
           }}
         />
       )}

@@ -39,6 +39,7 @@ export const AdminCategories: React.FC = () => {
 
   // Delete Confirm Modal
   const [deleteCatId, setDeleteCatId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const startCreate = () => {
     setEditingCat(null);
@@ -110,9 +111,14 @@ export const AdminCategories: React.FC = () => {
     updateCategory(catId, { subcategories: updatedSubcategories });
   };
 
-  const confirmDeleteCategory = (catId: string) => {
-    deleteCategory(catId);
-    setDeleteCatId(null);
+  const confirmDeleteCategory = async (catId: string) => {
+    setIsDeleting(true);
+    try {
+      await deleteCategory(catId);
+    } finally {
+      setIsDeleting(false);
+      setDeleteCatId(null);
+    }
   };
 
   return (
@@ -329,36 +335,57 @@ export const AdminCategories: React.FC = () => {
       </div>
 
       {/* Delete Category Confirmation */}
-      {deleteCatId && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl border border-slate-200">
-            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <div className="text-center space-y-1">
-              <h3 className="text-base font-bold text-slate-900">Kategoriyi Sil</h3>
-              <p className="text-xs text-slate-500">
-                Bu kategoriyi silmek istediğinize emin misiniz? Bağlı ürünler kategorisiz kalabilir.
-              </p>
-            </div>
+      {deleteCatId && (() => {
+        const catToDelete = categories.find(c => c.id === deleteCatId);
+        const affectedProducts = products.filter(p => p.categoryId === deleteCatId);
 
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                onClick={() => setDeleteCatId(null)}
-                className="flex-1 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 cursor-pointer"
-              >
-                İptal
-              </button>
-              <button
-                onClick={() => confirmDeleteCategory(deleteCatId)}
-                className="flex-1 py-2 text-xs font-bold rounded-xl bg-red-600 text-white cursor-pointer"
-              >
-                Sil
-              </button>
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl border border-slate-200 animate-fadeIn">
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="text-center space-y-1">
+                <h3 className="text-base font-bold text-slate-900">Kategoriyi Sil</h3>
+                <p className="text-xs text-slate-600 font-semibold">
+                  "{catToDelete?.name || 'Kategori'}" kategorisini silmek istediğinize emin misiniz?
+                </p>
+                {affectedProducts.length > 0 && (
+                  <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-2">
+                    Bu kategoriye bağlı <strong>{affectedProducts.length} adet ürün</strong> bulunmaktadır. Kategori silindiğinde bu ürünler kategorisiz olarak güncellenecektir.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setDeleteCatId(null)}
+                  className="flex-1 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
+                >
+                  İptal
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => confirmDeleteCategory(deleteCatId)}
+                  className="flex-1 py-2 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Siliniyor...</span>
+                    </>
+                  ) : (
+                    <span>Evet, Sil</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
