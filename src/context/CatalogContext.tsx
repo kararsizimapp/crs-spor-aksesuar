@@ -45,8 +45,8 @@ interface CatalogContextType {
   quotes: QuoteRequest[];
   settings: GeneralSettings;
   currentUser: User | null;
-  activeTab: 'home' | 'products' | 'categories' | 'flipbook' | 'admin';
-  setActiveTab: (tab: 'home' | 'products' | 'categories' | 'flipbook' | 'admin') => void;
+  activeTab: 'home' | 'products' | 'categories' | 'flipbook' | 'brands' | 'admin';
+  setActiveTab: (tab: 'home' | 'products' | 'categories' | 'flipbook' | 'brands' | 'admin') => void;
   selectedCategory: string | null;
   setSelectedCategory: (catId: string | null) => void;
   selectedSubcategory: string | null;
@@ -135,7 +135,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => unsubscribe();
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'home' | 'products' | 'categories' | 'flipbook' | 'admin'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'products' | 'categories' | 'flipbook' | 'brands' | 'admin'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');

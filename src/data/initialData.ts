@@ -217,6 +217,7 @@ export const INITIAL_QUOTES: QuoteRequest[] = [
 ];
 
 export const DEFAULT_SETTINGS: GeneralSettings = {
+  siteName: 'SCUCS Antrenman Malzemeleri',
   brandName: 'SCUCS Antrenman Malzemeleri',
   logoText: 'SCUCS',
   logoSubtext: 'ANTRENMAN MALZEMELERİ VE SPOR AKSESUARLARI',
@@ -233,6 +234,38 @@ export const DEFAULT_SETTINGS: GeneralSettings = {
   homeHeroTitle: 'Antrenmanını Bir Üst Seviyeye Taşı',
   homeHeroSubtext: 'Profesyonel antrenman ekipmanları, koordinasyon ürünleri ve saha aksesuarlarında B2B kurumsal katalog çözümleri.',
   homeBannerImage: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1600&q=80',
+  promoBanners: [
+    {
+      id: 'banner-1',
+      title: 'Yeni Sezon Slalom & Engeller',
+      subtitle: 'Kırılmaz esnek polimer hammadde, profesyonel kulüp ve altyapı standartları.',
+      badge: 'YENİ SEZON KAMPANYASI',
+      imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80',
+      linkTab: 'products',
+      buttonText: 'Ekipmanları İncele',
+      active: true,
+    },
+    {
+      id: 'banner-2',
+      title: 'Kulüplere Özel Toplu B2B Kataloğu',
+      subtitle: 'Spor kulüpleri, akademiler ve okul takımları için özel miktar avantajlı teklifler.',
+      badge: 'KURUMSAL B2B',
+      imageUrl: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1200&q=80',
+      linkTab: 'brands',
+      buttonText: 'Marka Vitrinine Git',
+      active: true,
+    },
+    {
+      id: 'banner-3',
+      title: 'Kırılmaz Esnek Antrenman Çanakları',
+      subtitle: 'Tüm renk ve ebatlarda 17cm - 45cm delikli & düz çanak serileri stokta.',
+      badge: 'POPÜLER STOK',
+      imageUrl: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1200&q=80',
+      linkTab: 'categories',
+      buttonText: 'Çanak Kategorisine Bak',
+      active: true,
+    },
+  ],
   aboutText: 'SCUCS, profesyonel kulüplerden spor okullarına, akademi eğitimcilerinden altyapı tesislerine kadar yüksek dayanıklılığa sahip antrenman ekipmanları üreten ve tedarik eden lider markadır. Ürünlerimiz kırılmaz hammadde, ergonomik tasarım ve uluslararası performans standartlarına sahiptir.',
   contactInfo: 'Ürün kataloğumuzdaki tüm modeller için doğrudan teknik detay ve kurumsal teklif talebinde bulunabilirsiniz.',
   defaultCurrency: 'TRY',

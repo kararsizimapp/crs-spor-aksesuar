@@ -98,7 +98,20 @@ export interface QuoteRequest {
   createdAt: string;
 }
 
+export interface HomeBanner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  badge?: string;
+  imageUrl: string;
+  linkTab?: 'products' | 'categories' | 'flipbook' | 'brands';
+  categoryId?: string;
+  buttonText?: string;
+  active: boolean;
+}
+
 export interface GeneralSettings {
+  siteName?: string;
   brandName: string;
   logoText: string;
   logoSubtext: string;
@@ -115,6 +128,7 @@ export interface GeneralSettings {
   homeHeroTitle: string;
   homeHeroSubtext: string;
   homeBannerImage: string;
+  promoBanners?: HomeBanner[];
   aboutText: string;
   contactInfo: string;
   defaultCurrency: string;

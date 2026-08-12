@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCatalog } from '../context/CatalogContext';
 import { ProductCard } from '../components/ProductCard';
+import { PromoBannerSlider } from '../components/PromoBannerSlider';
 import { getCategoryImage, DEFAULT_FALLBACK_IMAGE } from '../utils/formatters';
 import {
   Sparkles,
@@ -78,6 +79,9 @@ export const HomePage: React.FC = () => {
             })}
           </div>
         </section>
+
+        {/* POPÜLER KATEGORİLER ALTI KAYDIRILABİLİR BANNER SLIDER */}
+        <PromoBannerSlider />
 
         {/* FEATURED PRODUCTS (ÖNE ÇIKAN ÜRÜNLER) */}
         <section>

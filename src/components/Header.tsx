@@ -10,6 +10,7 @@ import {
   ChevronRight,
   BookOpen,
   ShoppingBag,
+  Award,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -28,7 +29,7 @@ export const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  const handleNav = (tab: 'home' | 'products' | 'categories' | 'flipbook' | 'admin') => {
+  const handleNav = (tab: 'home' | 'products' | 'categories' | 'flipbook' | 'brands' | 'admin') => {
     setActiveTab(tab);
     setMobileMenuOpen(false);
   };
@@ -129,6 +130,18 @@ export const Header: React.FC = () => {
               </button>
 
               <button
+                onClick={() => handleNav('brands')}
+                className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
+                  activeTab === 'brands'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>Markalar</span>
+              </button>
+
+              <button
                 onClick={() => handleNav('flipbook')}
                 className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
                   activeTab === 'flipbook'
@@ -205,6 +218,18 @@ export const Header: React.FC = () => {
             }`}
           >
             <span>Kategoriler</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleNav('brands')}
+            className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between ${
+              activeTab === 'brands' ? 'bg-red-600 text-white' : 'text-slate-800 hover:bg-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Award className="w-4 h-4" />
+              <span>Markalar / Marka Vitrini</span>
+            </div>
             <ChevronRight className="w-4 h-4" />
           </button>
           <button

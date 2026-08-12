@@ -10,7 +10,9 @@ import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { CategoriesPage } from './pages/CategoriesPage';
 import { FlipbookPage } from './pages/FlipbookPage';
+import { BrandShowcase } from './components/BrandShowcase';
 import { QuoteBasketDrawer } from './components/QuoteBasketDrawer';
+import { BackToTop } from './components/BackToTop';
 
 // Admin Pages
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -100,6 +102,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'home' && <HomePage />}
         {activeTab === 'products' && <ProductsPage />}
         {activeTab === 'categories' && <CategoriesPage />}
+        {activeTab === 'brands' && <BrandShowcase />}
         {activeTab === 'flipbook' && <FlipbookPage />}
 
         {activeTab === 'admin' && (
@@ -224,11 +227,12 @@ const AppContent: React.FC = () => {
         )}
       </main>
 
-      {/* Modals */}
+      {/* Modals & Floating Widgets */}
       <ProductDetailModal />
       <QuoteModal />
       <LightboxModal />
       <QuoteBasketDrawer />
+      <BackToTop />
     </div>
   );
 };
