@@ -77,6 +77,37 @@ export async function uploadProductImage(
 }
 
 /**
+ * Uploads a banner image file to Firebase Storage or converts to Data URL fallback.
+ */
+export async function uploadBannerImage(file: File): Promise<string> {
+  const validation = validateImageFile(file);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
+  try {
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const uniqueFileName = `${Date.now()}_${cleanFileName}`;
+    const filePath = `banners/${uniqueFileName}`;
+    const storageRef = ref(storage, filePath);
+
+    await uploadBytes(storageRef, file, {
+      contentType: file.type || 'image/jpeg',
+    });
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  } catch (err) {
+    console.warn('Firebase Storage upload warning, falling back to FileReader Data URL:', err);
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Dosya okunamadı.'));
+      reader.readAsDataURL(file);
+    });
+  }
+}
+
+/**
  * Deletes an image from Firebase Storage if the URL belongs to Firebase Storage.
  */
 export async function deleteProductImageFromStorage(imageUrl?: string | null): Promise<void> {

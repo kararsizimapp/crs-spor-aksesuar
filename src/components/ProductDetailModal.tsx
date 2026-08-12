@@ -11,7 +11,6 @@ import {
   Plus,
   Minus,
 } from 'lucide-react';
-import { CrossSellWidget } from './CrossSellWidget';
 
 export const ProductDetailModal: React.FC = () => {
   const {
@@ -269,14 +268,6 @@ export const ProductDetailModal: React.FC = () => {
 
             </div>
 
-          </div>
-
-          {/* Cross-Sell / Complementary Products Row */}
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            <CrossSellWidget
-              currentProduct={product}
-              onSelectProduct={(p) => setSelectedProductDetail(p)}
-            />
           </div>
         </div>
       </div>
