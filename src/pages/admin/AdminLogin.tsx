@@ -38,12 +38,24 @@ export const AdminLogin: React.FC = () => {
         </div>
 
         {/* Info Banner */}
-        <div className="bg-teal-950/60 border border-teal-500/30 rounded-xl p-3.5 text-xs text-teal-300 flex items-start gap-2.5">
-          <KeyRound className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <strong className="block font-bold text-white mb-0.5">Firebase Yönetici Girişi:</strong>
-            <span>Lütfen Firebase Console'da Authentication bölümünde tanımladığınız e-posta ve şifre ile giriş yapınız.</span>
+        <div className="bg-teal-950/60 border border-teal-500/30 rounded-xl p-3.5 text-xs text-teal-300 flex items-start justify-between gap-2.5">
+          <div className="flex items-start gap-2.5">
+            <KeyRound className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <strong className="block font-bold text-white mb-0.5">Yönetici Girişi:</strong>
+              <span>Firebase Authentication veya varsayılan Demo Hesabı (admin@scucs.com / admin123) ile giriş yapabilirsiniz.</span>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('admin@scucs.com');
+              setPassword('admin123');
+            }}
+            className="px-2.5 py-1 bg-teal-800/80 hover:bg-teal-700 text-white rounded-lg text-[10px] font-bold whitespace-nowrap transition-colors cursor-pointer border border-teal-600/50"
+          >
+            Demo Doldur
+          </button>
         </div>
 
         {errorMessage && (
