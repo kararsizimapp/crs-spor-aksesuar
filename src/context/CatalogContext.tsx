@@ -224,28 +224,6 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const loadedProducts = snapshot.docs.map((doc) => doc.data() as Product);
           loadedProducts.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
           setProducts(loadedProducts);
-
-          // If Firestore has fewer products than catalog, auto-sync missing catalog items
-          if (loadedProducts.length < INITIAL_PRODUCTS.length) {
-            const existingIds = new Set(loadedProducts.map((p) => p.id));
-            const missing = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
-            if (missing.length > 0) {
-              try {
-                const CHUNK_SIZE = 400;
-                for (let i = 0; i < missing.length; i += CHUNK_SIZE) {
-                  const chunk = missing.slice(i, i + CHUNK_SIZE);
-                  const batch = writeBatch(db);
-                  chunk.forEach((p) => {
-                    const ref = doc(db, 'products', p.id);
-                    batch.set(ref, sanitizeForFirestore(p));
-                  });
-                  await batch.commit();
-                }
-              } catch (err) {
-                console.error('Error auto-syncing missing products:', err);
-              }
-            }
-          }
         }
       },
       (err) => {
