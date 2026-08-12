@@ -35,6 +35,9 @@ import {
   AlertCircle,
   Info,
   Loader2,
+  Settings,
+  FileText,
+  Upload,
 } from 'lucide-react';
 
 type AdminTab = 'dashboard' | 'products' | 'categories' | 'quotes' | 'bulk' | 'settings' | 'add-product' | 'edit-product';
@@ -162,6 +165,9 @@ const AppContent: React.FC = () => {
                     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
                     { id: 'products', label: 'Ürün Yönetimi', icon: Package },
                     { id: 'categories', label: 'Kategoriler', icon: Layers },
+                    { id: 'quotes', label: 'Gelen Teklifler', icon: FileText },
+                    { id: 'bulk', label: 'Toplu İçe Aktar', icon: Upload },
+                    { id: 'settings', label: 'Genel & Banner Ayarları', icon: Settings },
                   ].map(tab => {
                     const IconComponent = tab.icon;
                     const isActive =
