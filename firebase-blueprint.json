@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Product catalog item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique product ID" },
+        "name": { "type": "string", "description": "Product title" },
+        "sku": { "type": "string", "description": "Stock keeping unit" },
+        "categoryId": { "type": "string", "description": "Category ID" }
+      },
+      "required": ["id", "name"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Category ID" },
+        "name": { "type": "string", "description": "Category name" }
+      },
+      "required": ["id", "name"]
+    },
+    "Quote": {
+      "title": "Quote",
+      "description": "B2B Price Quote Request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Quote ID" },
+        "contactName": { "type": "string", "description": "Customer name" }
+      },
+      "required": ["id", "contactName"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "General site settings",
+      "type": "object",
+      "properties": {
+        "siteName": { "type": "string", "description": "Site name" }
+      }
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Catalog products collection"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Catalog categories collection"
+    },
+    "/quotes/{quoteId}": {
+      "schema": { "$ref": "#/entities/Quote" },
+      "description": "B2B quote requests"
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "Application settings"
+    }
+  }
+}

@@ -79,6 +79,13 @@ interface CatalogContextType {
   deleteProductsBulk: (ids: string[]) => Promise<void>;
   duplicateProduct: (id: string) => Promise<void>;
   togglePublishProduct: (id: string) => Promise<void>;
+  updateProductSortOrder: (id: string, newSortOrder: number) => Promise<void>;
+  reorderProducts: (orderedIds: string[]) => Promise<void>;
+  moveProductOrder: (
+    productId: string,
+    direction: 'up' | 'down' | 'top' | 'bottom',
+    scopeIds?: string[]
+  ) => Promise<void>;
 
   // Category Actions
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
@@ -86,6 +93,8 @@ interface CatalogContextType {
   deleteCategory: (id: string) => Promise<{ success: boolean; message?: string }>;
   addSubcategory: (categoryId: string, name: string) => Promise<void>;
   deleteSubcategory: (categoryId: string, subcategoryId: string) => Promise<void>;
+  reorderCategories: (orderedIds: string[]) => Promise<void>;
+  moveCategoryOrder: (categoryId: string, direction: 'up' | 'down') => Promise<void>;
 
   // Quote Actions
   addQuoteRequest: (quote: Omit<QuoteRequest, 'id' | 'createdAt' | 'status'>) => Promise<void>;
@@ -299,7 +308,28 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             console.error('Error seeding settings:', e);
           }
         } else {
-          setSettings(docSnap.data() as GeneralSettings);
+          const remoteSettings = docSnap.data() as GeneralSettings;
+          if (
+            remoteSettings.siteName?.includes('SCUCS') ||
+            remoteSettings.brandName?.includes('SCUCS') ||
+            !remoteSettings.brandName
+          ) {
+            const updatedSettings: GeneralSettings = {
+              ...remoteSettings,
+              siteName: 'CRS Spor Antrenman Malzemeleri',
+              brandName: 'CRS Spor Antrenman Malzemeleri',
+              logoText: remoteSettings.logoText === 'SCUCS' ? 'CRS SPOR' : (remoteSettings.logoText || 'CRS SPOR'),
+              aboutText: remoteSettings.aboutText?.replace(/SCUCS/g, 'CRS Spor') || DEFAULT_SETTINGS.aboutText,
+            };
+            setSettings(updatedSettings);
+            try {
+              setDoc(doc(db, 'settings', 'general'), sanitizeForFirestore(updatedSettings), { merge: true });
+            } catch (err) {
+              console.error('Error auto-migrating settings:', err);
+            }
+          } else {
+            setSettings(remoteSettings);
+          }
         }
       },
       (err) => {
@@ -574,6 +604,148 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (err) {
       console.error('Error updating products bulk:', err);
       showNotification('Toplu güncelleme sırasında hata oluştu.', 'error');
+    }
+  };
+
+  const updateProductSortOrder = async (id: string, newSortOrder: number) => {
+    const target = products.find((p) => p.id === id);
+    if (!target) return;
+    const now = new Date().toISOString();
+    const updated: Product = { ...target, sortOrder: newSortOrder, updatedAt: now };
+
+    setProducts((prev) => {
+      const mapped = prev.map((p) => (p.id === id ? updated : p));
+      return [...mapped].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    });
+
+    try {
+      await setDoc(doc(db, 'products', id), sanitizeForFirestore(updated), { merge: true });
+      showNotification(`"${target.name}" sıralaması #${newSortOrder} olarak kaydedildi.`);
+    } catch (err) {
+      console.error('Error updating sortOrder:', err);
+      showNotification('Sıralama güncellenirken hata oluştu.', 'error');
+    }
+  };
+
+  const reorderProducts = async (orderedIds: string[]) => {
+    if (orderedIds.length === 0) return;
+    const now = new Date().toISOString();
+
+    const orderMap = new Map<string, number>();
+    orderedIds.forEach((id, idx) => {
+      orderMap.set(id, idx + 1);
+    });
+
+    const updatedProducts = products.map((p) => {
+      if (orderMap.has(p.id)) {
+        return { ...p, sortOrder: orderMap.get(p.id)!, updatedAt: now };
+      }
+      return p;
+    });
+
+    updatedProducts.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    setProducts(updatedProducts);
+
+    try {
+      const chunkSize = 400;
+      for (let i = 0; i < orderedIds.length; i += chunkSize) {
+        const chunk = orderedIds.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+        chunk.forEach((id) => {
+          const target = updatedProducts.find((p) => p.id === id);
+          if (target) {
+            batch.set(doc(db, 'products', id), sanitizeForFirestore(target), { merge: true });
+          }
+        });
+        await batch.commit();
+      }
+      showNotification(`${orderedIds.length} ürünün yeni sıralaması başarıyla kaydedildi.`);
+    } catch (err) {
+      console.error('Error reordering products:', err);
+      showNotification('Sıralama kaydedilirken hata oluştu.', 'error');
+    }
+  };
+
+  const moveProductOrder = async (
+    productId: string,
+    direction: 'up' | 'down' | 'top' | 'bottom',
+    scopeIds?: string[]
+  ) => {
+    const activeList = scopeIds && scopeIds.length > 0
+      ? (scopeIds.map((id) => products.find((p) => p.id === id)).filter(Boolean) as Product[])
+      : [...products].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    const idx = activeList.findIndex((p) => p.id === productId);
+    if (idx === -1) return;
+
+    const newList = [...activeList];
+    if (direction === 'up' && idx > 0) {
+      const temp = newList[idx];
+      newList[idx] = newList[idx - 1];
+      newList[idx - 1] = temp;
+    } else if (direction === 'down' && idx < newList.length - 1) {
+      const temp = newList[idx];
+      newList[idx] = newList[idx + 1];
+      newList[idx + 1] = temp;
+    } else if (direction === 'top' && idx > 0) {
+      const [item] = newList.splice(idx, 1);
+      newList.unshift(item);
+    } else if (direction === 'bottom' && idx < newList.length - 1) {
+      const [item] = newList.splice(idx, 1);
+      newList.push(item);
+    } else {
+      return;
+    }
+
+    await reorderProducts(newList.map((p) => p.id));
+  };
+
+  const reorderCategories = async (orderedIds: string[]) => {
+    if (orderedIds.length === 0) return;
+    const orderMap = new Map<string, number>();
+    orderedIds.forEach((id, idx) => {
+      orderMap.set(id, idx + 1);
+    });
+
+    const updatedCategories = categories.map((c) => {
+      if (orderMap.has(c.id)) {
+        return { ...c, sortOrder: orderMap.get(c.id)! };
+      }
+      return c;
+    });
+
+    updatedCategories.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    setCategories(updatedCategories);
+
+    try {
+      const batch = writeBatch(db);
+      orderedIds.forEach((id) => {
+        const target = updatedCategories.find((c) => c.id === id);
+        if (target) {
+          batch.set(doc(db, 'categories', id), sanitizeForFirestore(target), { merge: true });
+        }
+      });
+      await batch.commit();
+      showNotification('Kategori sıralaması kaydedildi.');
+    } catch (err) {
+      console.error('Error reordering categories:', err);
+    }
+  };
+
+  const moveCategoryOrder = async (categoryId: string, direction: 'up' | 'down') => {
+    const sorted = [...categories].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const idx = sorted.findIndex((c) => c.id === categoryId);
+    if (idx === -1) return;
+    if (direction === 'up' && idx > 0) {
+      const temp = sorted[idx];
+      sorted[idx] = sorted[idx - 1];
+      sorted[idx - 1] = temp;
+      await reorderCategories(sorted.map((c) => c.id));
+    } else if (direction === 'down' && idx < sorted.length - 1) {
+      const temp = sorted[idx];
+      sorted[idx] = sorted[idx + 1];
+      sorted[idx + 1] = temp;
+      await reorderCategories(sorted.map((c) => c.id));
     }
   };
 
@@ -916,11 +1088,16 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     deleteProductsBulk,
     duplicateProduct,
     togglePublishProduct,
+    updateProductSortOrder,
+    reorderProducts,
+    moveProductOrder,
     addCategory,
     updateCategory,
     deleteCategory,
     addSubcategory,
     deleteSubcategory,
+    reorderCategories,
+    moveCategoryOrder,
     addQuoteRequest,
     updateQuoteStatus,
     deleteQuoteRequest,

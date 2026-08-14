@@ -30,10 +30,14 @@ import {
   Zap,
   Award,
   SlidersHorizontal,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { AdminQuickImageUpload } from './AdminQuickImageUpload';
 import { AdminQuickEditModal, QuickEditTab } from './AdminQuickEditModal';
 import { AdminBatchEditModal } from './AdminBatchEditModal';
+import { AdminQuickSortModal } from './AdminQuickSortModal';
 
 interface AdminProductsProps {
   onAddNew: () => void;
@@ -50,6 +54,8 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
     duplicateProduct,
     togglePublishProduct,
     setSelectedProductDetail,
+    updateProductSortOrder,
+    moveProductOrder,
   } = useCatalog();
 
   const [search, setSearch] = useState('');
@@ -74,6 +80,9 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
   // Batch edit modal state
   const [showBatchEditModal, setShowBatchEditModal] = useState(false);
   const [batchEditTargetIds, setBatchEditTargetIds] = useState<string[]>([]);
+
+  // Quick sort modal state
+  const [showQuickSortModal, setShowQuickSortModal] = useState(false);
 
   const openQuickEdit = (productId: string | null, tab: QuickEditTab) => {
     setQuickEditProductId(productId || (products[0]?.id || null));
@@ -164,6 +173,15 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            onClick={() => setShowQuickSortModal(true)}
+            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer border border-amber-400 active:scale-95 animate-pulse"
+            title="Tüm ürünlerin katalogdaki sırasını hızlıca düzenleyin"
+          >
+            <ArrowUpDown className="w-4 h-4 text-slate-950" />
+            <span>Hızlı Sıralama Değiştir</span>
+          </button>
+
+          <button
             onClick={onAddNew}
             className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-teal-900/20 flex items-center gap-1.5 cursor-pointer"
           >
@@ -189,11 +207,21 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
             <span>Hızlı Düzenleme Menüleri & İşlemleri</span>
           </div>
           <span className="text-[11px] font-bold text-amber-700/80">
-            Tek tıkla tüm ürünlerinizin detaylarını hızlıca güncelleyin
+            Tek tıkla tüm ürünlerinizin detaylarını ve sıralamalarını hızlıca güncelleyin
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Hızlı Sıralama Değiştir (Sürükle / Şablonlar) */}
+          <button
+            onClick={() => setShowQuickSortModal(true)}
+            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-full transition-all shadow-md flex items-center gap-1.5 cursor-pointer border border-amber-400 active:scale-95 ring-2 ring-amber-300/60"
+            title="Ürünlerin gösterim sırasını sürükleyerek veya A-Z, Fiyat, Kategori şablonlarıyla sıralayın"
+          >
+            <ArrowUpDown className="w-4 h-4 text-slate-950" />
+            <span>↕️ Hızlı Sıralama Değiştir (Sürükle / Şablonlar)</span>
+          </button>
+
           {/* Listeden Toplu Hızlı Düzenle (Tablo) */}
           <button
             onClick={() => {
@@ -450,13 +478,23 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
                 <th className="p-3.5">Kategori</th>
                 <th className="p-3.5">Fiyat / Tür</th>
                 <th className="p-3.5">Stok / Durum</th>
+                <th className="p-3.5 w-28 text-center">
+                  <button
+                    onClick={() => setShowQuickSortModal(true)}
+                    className="inline-flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer text-amber-300 font-black"
+                    title="Hızlı Sıralama Modunu Aç"
+                  >
+                    <span>Sıra No</span>
+                    <ArrowUpDown className="w-3.5 h-3.5 text-amber-400" />
+                  </button>
+                </th>
                 <th className="p-3.5 text-right">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-500">
+                  <td colSpan={8} className="p-8 text-center text-slate-500">
                     Filtre kriterlerine uygun ürün bulunamadı.
                   </td>
                 </tr>
@@ -557,6 +595,53 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
                             )}
                             {p.status}
                           </span>
+                        </div>
+                      </td>
+
+                      {/* Hızlı Sıralama / Sıra No Hücresi */}
+                      <td className="p-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <input
+                            type="number"
+                            min={1}
+                            defaultValue={p.sortOrder ?? 1}
+                            key={`tbl-sort-${p.id}-${p.sortOrder}`}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                                if (!isNaN(val) && val > 0) {
+                                  updateProductSortOrder(p.id, val);
+                                }
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              if (!isNaN(val) && val > 0 && val !== p.sortOrder) {
+                                updateProductSortOrder(p.id, val);
+                              }
+                            }}
+                            className="w-12 py-1 text-center font-mono font-bold text-xs text-teal-900 bg-teal-50/90 border border-teal-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs"
+                            title="Sıra Numarası (Yazıp Enter'a basarak kaydedin)"
+                          />
+                          <div className="flex flex-col gap-0.5">
+                            <button
+                              type="button"
+                              onClick={() => moveProductOrder(p.id, 'up', filtered.map(f => f.id))}
+                              className="p-0.5 text-slate-500 hover:text-teal-700 hover:bg-teal-100 rounded transition-colors cursor-pointer border border-slate-200 bg-white"
+                              title="1 Sıra Yukarı Taşı"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveProductOrder(p.id, 'down', filtered.map(f => f.id))}
+                              className="p-0.5 text-slate-500 hover:text-teal-700 hover:bg-teal-100 rounded transition-colors cursor-pointer border border-slate-200 bg-white"
+                              title="1 Sıra Aşağı Taşı"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </td>
 
@@ -735,6 +820,14 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
             setShowBatchEditModal(false);
             setBatchEditTargetIds([]);
           }}
+        />
+      )}
+
+      {/* Quick Sort Modal (Hızlı Sıralama Değiştirme Modu) */}
+      {showQuickSortModal && (
+        <AdminQuickSortModal
+          initialCategoryId={selectedCat || null}
+          onClose={() => setShowQuickSortModal(false)}
         />
       )}
     </div>

@@ -3,10 +3,22 @@ import { useCatalog } from '../../context/CatalogContext';
 import { Category, Subcategory } from '../../types';
 import { generateSlug, getCategoryImage, DEFAULT_FALLBACK_IMAGE } from '../../utils/formatters';
 import { convertFileToBase64 } from '../../utils/imageUtils';
-import { Plus, Edit, Trash2, Layers, AlertTriangle, ChevronRight, FolderPlus, Upload, Loader2 } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Layers,
+  AlertTriangle,
+  ChevronRight,
+  FolderPlus,
+  Upload,
+  Loader2,
+  ChevronUp,
+  ChevronDown,
+} from 'lucide-react';
 
 export const AdminCategories: React.FC = () => {
-  const { categories, products, addCategory, updateCategory, deleteCategory } = useCatalog();
+  const { categories, products, addCategory, updateCategory, deleteCategory, moveCategoryOrder } = useCatalog();
 
   const [editingCat, setEditingCat] = useState<Category | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -252,6 +264,26 @@ export const AdminCategories: React.FC = () => {
                   </div>
 
                   <div className="flex items-center space-x-1">
+                    {/* Move Up / Down */}
+                    <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg mr-1 p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => moveCategoryOrder(cat.id, 'up')}
+                        className="p-1 hover:bg-slate-800 text-slate-400 hover:text-teal-300 rounded transition-colors cursor-pointer"
+                        title="Kategoriyi 1 Sıra Yukarı Al"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveCategoryOrder(cat.id, 'down')}
+                        className="p-1 hover:bg-slate-800 text-slate-400 hover:text-teal-300 rounded transition-colors cursor-pointer"
+                        title="Kategoriyi 1 Sıra Aşağı Al"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => startEdit(cat)}
                       className="p-1.5 hover:bg-slate-800 rounded text-slate-300 cursor-pointer"
