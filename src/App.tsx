@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CatalogProvider, useCatalog } from './context/CatalogContext';
 import { Header } from './components/Header';
 import { ProductDetailModal } from './components/ProductDetailModal';
@@ -50,7 +50,21 @@ const AppContent: React.FC = () => {
     isAuthLoading,
     logoutAdmin,
     notification,
+    settings,
   } = useCatalog();
+
+  // Dynamic favicon & title sync
+  useEffect(() => {
+    if (settings) {
+      if (settings.brandName || settings.siteName) {
+        document.title = `${settings.brandName || settings.siteName} | B2B Dijital Katalog`;
+      }
+      const faviconElem = document.getElementById('dynamic-favicon') as HTMLLinkElement | null;
+      if (faviconElem && settings.faviconUrl) {
+        faviconElem.href = settings.faviconUrl;
+      }
+    }
+  }, [settings?.faviconUrl, settings?.brandName, settings?.siteName]);
 
   const [adminSubTab, setAdminSubTab] = useState<AdminTab>('dashboard');
   const [editingProductId, setEditingProductId] = useState<string | null>(null);

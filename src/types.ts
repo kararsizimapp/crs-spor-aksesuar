@@ -115,6 +115,7 @@ export interface GeneralSettings {
   brandName: string;
   logoText: string;
   logoSubtext: string;
+  faviconUrl?: string;
   phone: string;
   whatsappNumber: string;
   email: string;

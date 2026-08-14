@@ -17,6 +17,7 @@ export const AdminSettings: React.FC = () => {
   const [homeHeroTitle, setHomeHeroTitle] = useState(settings.homeHeroTitle);
   const [homeHeroSubtext, setHomeHeroSubtext] = useState(settings.homeHeroSubtext);
   const [homeBannerImage, setHomeBannerImage] = useState(settings.homeBannerImage);
+  const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl || '/favicon.svg');
   const [aboutText, setAboutText] = useState(settings.aboutText);
 
   // Promo Banners State
@@ -39,13 +40,31 @@ export const AdminSettings: React.FC = () => {
 
   // File Upload States & Refs
   const [isUploadingHomeBanner, setIsUploadingHomeBanner] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
   const [isUploadingNewBanner, setIsUploadingNewBanner] = useState(false);
   const [uploadingBannerId, setUploadingBannerId] = useState<string | null>(null);
 
   const homeBannerFileRef = useRef<HTMLInputElement | null>(null);
+  const faviconFileRef = useRef<HTMLInputElement | null>(null);
   const newBannerFileRef = useRef<HTMLInputElement | null>(null);
   const existingBannerFileRef = useRef<HTMLInputElement | null>(null);
   const [selectedBannerToUpdate, setSelectedBannerToUpdate] = useState<string | null>(null);
+
+  const handleUploadFavicon = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingFavicon(true);
+    try {
+      const url = await uploadBannerImage(file);
+      setFaviconUrl(url);
+      showNotification('Favicon görseli başarıyla yüklendi.');
+    } catch (err: any) {
+      showNotification(err?.message || 'Favicon yüklenirken hata oluştu.', 'error');
+    } finally {
+      setIsUploadingFavicon(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   const handleUploadHomeBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -150,10 +169,11 @@ export const AdminSettings: React.FC = () => {
       homeHeroTitle,
       homeHeroSubtext,
       homeBannerImage,
+      faviconUrl,
       promoBanners: banners,
       aboutText,
     });
-    showNotification('Sistem ayarları ve slider bannerları başarıyla güncellendi.');
+    showNotification('Sistem ayarları, favicon ve slider bannerları başarıyla güncellendi.');
   };
 
   const handleResetData = () => {
@@ -248,6 +268,64 @@ export const AdminSettings: React.FC = () => {
               onChange={e => setAddress(e.target.value)}
               className="w-full p-2.5 rounded-lg border border-slate-300"
             />
+          </div>
+
+          {/* Site Favicon Setting */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block font-bold text-slate-900 text-xs">
+                  Site Favicon (Tarayıcı Sekme İkonu)
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  Tarayıcı sekmelerinde ve yer imlerinde görünen site ikonudur (SVG, PNG, ICO önerilir).
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-white border border-slate-300 p-1 flex items-center justify-center shadow-xs">
+                  {faviconUrl ? (
+                    <img src={faviconUrl} alt="Favicon Önizleme" className="w-6 h-6 object-contain" />
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-bold">Yok</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+              <input
+                type="text"
+                placeholder="/favicon.svg veya https://..."
+                value={faviconUrl}
+                onChange={e => setFaviconUrl(e.target.value)}
+                className="flex-1 p-2.5 rounded-lg border border-slate-300 text-xs font-mono w-full bg-white"
+              />
+              <input
+                type="file"
+                ref={faviconFileRef}
+                onChange={handleUploadFavicon}
+                accept="image/png, image/svg+xml, image/x-icon, image/jpeg"
+                className="hidden"
+              />
+              <button
+                type="button"
+                disabled={isUploadingFavicon}
+                onClick={() => faviconFileRef.current?.click()}
+                className="px-3.5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs disabled:opacity-50"
+              >
+                {isUploadingFavicon ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Yükleniyor...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Favicon Yükle</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 

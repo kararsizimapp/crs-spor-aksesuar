@@ -221,6 +221,7 @@ export const DEFAULT_SETTINGS: GeneralSettings = {
   brandName: 'SCUCS Antrenman Malzemeleri',
   logoText: 'SCUCS',
   logoSubtext: 'ANTRENMAN MALZEMELERİ VE SPOR AKSESUARLARI',
+  faviconUrl: '/favicon.svg',
   phone: '0212 555 10 20',
   whatsappNumber: '905321002030',
   email: 'info@scucs.com.tr',
