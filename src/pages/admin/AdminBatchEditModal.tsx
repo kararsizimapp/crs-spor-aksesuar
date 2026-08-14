@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product, StockStatus, PriceType } from '../../types';
 import { useCatalog } from '../../context/CatalogContext';
+import { matchProduct } from '../../utils/searchUtils';
 import {
   X,
   Save,
@@ -379,15 +380,21 @@ export const AdminBatchEditModal: React.FC<AdminBatchEditModalProps> = ({
   // Filtered rows for display
   const displayedRows = productRows.filter((p) => {
     const r = tableData[p.id] || p;
-    const nameStr = (r.name || p.name || '').toLowerCase();
-    const skuStr = (r.sku || p.sku || '').toLowerCase();
-    const brandStr = (r.brand || p.brand || '').toLowerCase();
-    const q = searchQuery.toLowerCase().trim();
+    const mergedProduct: Product = {
+      ...p,
+      name: r.name !== undefined ? r.name : p.name,
+      sku: r.sku !== undefined ? r.sku : p.sku,
+      brand: r.brand !== undefined ? r.brand : p.brand,
+      categoryId: r.categoryId !== undefined ? r.categoryId : p.categoryId,
+    };
 
-    const matchesQuery = !q || nameStr.includes(q) || skuStr.includes(q) || brandStr.includes(q);
-    const matchesCategory = !categoryFilter || r.categoryId === categoryFilter || p.categoryId === categoryFilter;
+    if (searchQuery.trim()) {
+      const score = matchProduct(mergedProduct, searchQuery, categories);
+      if (score <= 0) return false;
+    }
 
-    return matchesQuery && matchesCategory;
+    const matchesCategory = !categoryFilter || mergedProduct.categoryId === categoryFilter;
+    return matchesCategory;
   });
 
   const selectedCatObj = categories.find((c) => c.id === applyCatId);

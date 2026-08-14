@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Product } from '../../types';
 import { useCatalog } from '../../context/CatalogContext';
 import { getProductImage, formatPrice, DEFAULT_FALLBACK_IMAGE } from '../../utils/formatters';
+import { matchProduct } from '../../utils/searchUtils';
 import {
   X,
   Save,
@@ -68,14 +69,12 @@ export const AdminQuickSortModal: React.FC<AdminQuickSortModalProps> = ({
     return currentOrderedProducts.filter((p) => {
       if (selectedCategory && p.categoryId !== selectedCategory) return false;
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchName = p.name.toLowerCase().includes(q);
-        const matchSku = p.sku.toLowerCase().includes(q);
-        if (!matchName && !matchSku) return false;
+        const score = matchProduct(p, searchQuery, categories);
+        if (score <= 0) return false;
       }
       return true;
     });
-  }, [currentOrderedProducts, selectedCategory, searchQuery]);
+  }, [currentOrderedProducts, selectedCategory, searchQuery, categories]);
 
   // Move an item within the master list
   const moveItem = (productId: string, direction: 'up' | 'down' | 'top' | 'bottom') => {

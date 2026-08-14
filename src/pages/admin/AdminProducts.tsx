@@ -38,6 +38,7 @@ import { AdminQuickImageUpload } from './AdminQuickImageUpload';
 import { AdminQuickEditModal, QuickEditTab } from './AdminQuickEditModal';
 import { AdminBatchEditModal } from './AdminBatchEditModal';
 import { AdminQuickSortModal } from './AdminQuickSortModal';
+import { matchProduct } from '../../utils/searchUtils';
 
 interface AdminProductsProps {
   onAddNew: () => void;
@@ -93,10 +94,8 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
   const filtered = useMemo(() => {
     return products.filter(p => {
       if (search.trim()) {
-        const q = search.toLowerCase().trim();
-        const matchName = p.name.toLowerCase().includes(q);
-        const matchSku = p.sku.toLowerCase().includes(q);
-        if (!matchName && !matchSku) return false;
+        const score = matchProduct(p, search, categories);
+        if (score <= 0) return false;
       }
 
       if (selectedCat && p.categoryId !== selectedCat) return false;
@@ -104,7 +103,7 @@ export const AdminProducts: React.FC<AdminProductsProps> = ({ onAddNew, onEdit }
 
       return true;
     });
-  }, [products, search, selectedCat, selectedStatus]);
+  }, [products, search, categories, selectedCat, selectedStatus]);
 
   // Handle select all filtered items
   const allFilteredSelected = useMemo(() => {

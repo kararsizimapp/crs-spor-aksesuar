@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useCatalog } from '../context/CatalogContext';
 import { ProductCard } from '../components/ProductCard';
+import { matchProduct } from '../utils/searchUtils';
 import {
   Search,
   Filter,
@@ -11,6 +12,9 @@ import {
   PackageSearch,
   ChevronLeft,
   ChevronRight,
+  X,
+  Globe,
+  Sparkles,
 } from 'lucide-react';
 
 export const ProductsPage: React.FC = () => {
@@ -57,38 +61,65 @@ export const ProductsPage: React.FC = () => {
     return currentCategoryObj.subcategories || [];
   }, [currentCategoryObj]);
 
-  // Filter & Sort Logic
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      if (p.status !== 'Yayında') return false;
+  // Filter & Sort Logic with Intelligent Search & Relevance Scoring
+  const { filteredProducts, globalMatchCount } = useMemo(() => {
+    const trimmedQuery = searchQuery.trim();
+    let globalMatches = 0;
 
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchName = p.name.toLowerCase().includes(query);
-        const matchSku = p.sku.toLowerCase().includes(query);
-        if (!matchName && !matchSku) return false;
+    // Filter products
+    const matchedList: { product: typeof products[0]; score: number }[] = [];
+
+    products.forEach((p) => {
+      // Allow 'Yayında' or any product not explicitly marked as inactive/draft
+      if (p.status === 'Pasif' || p.status === 'Taslak' || (p as any).isPublished === false) {
+        return;
       }
 
-      if (selectedCategory && p.categoryId !== selectedCategory) return false;
-      if (selectedSubcategory && p.subcategoryId !== selectedSubcategory) return false;
-      if (priceTypeFilter !== 'all' && p.priceType !== priceTypeFilter) return false;
-      if (stockFilter !== 'all' && p.stockStatus !== stockFilter) return false;
-      if (selectedColor !== 'all' && !p.colors?.includes(selectedColor)) return false;
-      if (onlyFeatured && !p.featured) return false;
-      if (onlyNew && !p.isNew) return false;
-      if (p.price && p.price > maxPriceLimit) return false;
+      // Check search match
+      let searchScore = 100;
+      if (trimmedQuery) {
+        searchScore = matchProduct(p, trimmedQuery, categories);
+        if (searchScore <= 0) return;
+        globalMatches++;
+      }
 
-      return true;
-    }).sort((a, b) => {
-      if (sortOption === 'price-asc') return (a.price || 0) - (b.price || 0);
-      if (sortOption === 'price-desc') return (b.price || 0) - (a.price || 0);
-      if (sortOption === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      if (sortOption === 'name-asc') return a.name.localeCompare(b.name, 'tr');
-      if (sortOption === 'sku-asc') return a.sku.localeCompare(b.sku, 'tr');
-      return a.sortOrder - b.sortOrder;
+      // Category & Subcategory filter
+      if (selectedCategory && p.categoryId !== selectedCategory) return;
+      if (selectedSubcategory && p.subcategoryId !== selectedSubcategory) return;
+      
+      // Secondary filters
+      if (priceTypeFilter !== 'all' && p.priceType !== priceTypeFilter) return;
+      if (stockFilter !== 'all' && p.stockStatus !== stockFilter) return;
+      if (selectedColor !== 'all' && !p.colors?.includes(selectedColor)) return;
+      if (onlyFeatured && !p.featured) return;
+      if (onlyNew && !p.isNew) return;
+      if (p.price && p.price > maxPriceLimit) return;
+
+      matchedList.push({ product: p, score: searchScore });
     });
+
+    // Sort products
+    matchedList.sort((a, b) => {
+      if (sortOption === 'price-asc') return (a.product.price || 0) - (b.product.price || 0);
+      if (sortOption === 'price-desc') return (b.product.price || 0) - (a.product.price || 0);
+      if (sortOption === 'newest') return new Date(b.product.createdAt).getTime() - new Date(a.product.createdAt).getTime();
+      if (sortOption === 'name-asc') return a.product.name.localeCompare(b.product.name, 'tr');
+      if (sortOption === 'sku-asc') return a.product.sku.localeCompare(b.product.sku, 'tr');
+
+      // Default sorting: If searching, sort by highest relevance score first!
+      if (trimmedQuery) {
+        if (b.score !== a.score) return b.score - a.score;
+      }
+      return (a.product.sortOrder || 0) - (b.product.sortOrder || 0);
+    });
+
+    return {
+      filteredProducts: matchedList.map(m => m.product),
+      globalMatchCount: globalMatches,
+    };
   }, [
     products,
+    categories,
     searchQuery,
     selectedCategory,
     selectedSubcategory,
@@ -149,7 +180,8 @@ export const ProductsPage: React.FC = () => {
             {currentCategoryObj ? currentCategoryObj.name : 'Tüm Antrenman Ekipmanları'}
           </h1>
           <p className="text-slate-400 text-xs mt-1">
-            Toplam <strong className="text-white font-black">{filteredProducts.length}</strong> ürün listeleniyor.
+            Toplam <strong className="text-white font-black">{filteredProducts.length}</strong> ürün listeleniyor
+            {searchQuery.trim() ? ` ("${searchQuery}" için sonuçlar)` : ''}.
           </p>
         </div>
 
@@ -157,14 +189,66 @@ export const ProductsPage: React.FC = () => {
         <div className="w-full md:w-96 relative">
           <input
             type="text"
-            placeholder="Ürün adı, Stok Kodu (SKU) veya kategori ara..."
+            placeholder="Ürün adı, Stok Kodu (SKU), kategori veya 'hız paraşütü' ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+            className="w-full pl-10 pr-10 py-2.5 text-xs font-medium rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 shadow-inner"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg absolute right-2.5 top-2 cursor-pointer transition-colors"
+              title="Aramayı Temizle"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Cross-Category Search Match Notice (If filtered by category but results exist in other categories) */}
+      {selectedCategory && searchQuery.trim() && filteredProducts.length === 0 && globalMatchCount > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-950 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Globe className="w-5 h-5 text-amber-600 shrink-0" />
+            <span className="text-xs font-medium text-amber-900">
+              <strong>"{searchQuery}"</strong> terimi seçili kategori içinde bulunamadı, ancak tüm katalogda <strong>{globalMatchCount}</strong> adet ürün bulundu.
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedCategory(null);
+              setSelectedSubcategory(null);
+            }}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black rounded-xl shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+          >
+            Tüm Kategorilerde Göster ({globalMatchCount} Ürün)
+          </button>
+        </div>
+      )}
+
+      {/* Active Search Term Banner with 1-Click Clear */}
+      {searchQuery.trim() && (
+        <div className="flex items-center justify-between bg-slate-100 border border-slate-200 px-4 py-2.5 rounded-xl text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-600">Arama Filtresi:</span>
+            <span className="bg-red-600 text-white px-2.5 py-0.5 rounded-full font-black text-[11px] shadow-2xs">
+              "{searchQuery}"
+            </span>
+            <span className="text-slate-500 font-medium hidden sm:inline">
+              ({filteredProducts.length} eşleşen ürün bulundu)
+            </span>
+          </div>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-red-600 hover:text-red-700 font-black flex items-center gap-1 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+            Aramayı Kaldır
+          </button>
+        </div>
+      )}
 
       {/* Subcategory Pills */}
       {currentSubcategories.length > 0 && (

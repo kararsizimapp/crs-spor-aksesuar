@@ -74,22 +74,35 @@ export const Header: React.FC = () => {
             <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
               <input
                 type="text"
-                placeholder="Ürün adı, Stok Kodu (SKU) veya kategori ara..."
+                placeholder="Ürün adı, Stok Kodu (SKU), kategori veya 'hız paraşütü' ara..."
                 value={searchQuery}
                 onChange={e => {
                   setSearchQuery(e.target.value);
                   if (activeTab !== 'products') setActiveTab('products');
                 }}
-                className="w-full pl-11 pr-24 py-2.5 text-sm rounded-xl bg-slate-50 border-2 border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-500/15 transition-all shadow-2xs"
+                className="w-full pl-11 pr-28 py-2.5 text-sm rounded-xl bg-slate-50 border-2 border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-500/15 transition-all shadow-2xs"
               />
               <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3" />
-              <button
-                type="submit"
-                className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-lg shadow-xs transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <Search className="w-3.5 h-3.5" />
-                <span>ARA</span>
-              </button>
+              
+              <div className="absolute right-1.5 top-1.5 bottom-1.5 flex items-center gap-1">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
+                    title="Aramayı Temizle"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="h-full px-3.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-lg shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>ARA</span>
+                </button>
+              </div>
             </form>
           </div>
 
