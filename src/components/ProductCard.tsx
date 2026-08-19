@@ -32,12 +32,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         {/* Cover Image */}
         <div 
           onClick={() => setSelectedProductDetail(product)}
-          className="relative w-full sm:w-64 h-48 sm:h-auto bg-slate-100 overflow-hidden flex-shrink-0 cursor-pointer"
+          className="relative w-full sm:w-64 h-48 sm:h-auto bg-slate-100 overflow-hidden flex-shrink-0 cursor-pointer flex items-center justify-center p-2.5"
         >
           <img
             src={getProductImage(product)}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full max-h-48 sm:max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
@@ -120,12 +120,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
       {/* Product Image Focal Point */}
       <div 
         onClick={() => setSelectedProductDetail(product)}
-        className="relative aspect-4/3 bg-slate-100 overflow-hidden cursor-pointer flex items-center justify-center p-2"
+        className="relative aspect-4/3 bg-slate-100 overflow-hidden cursor-pointer flex items-center justify-center p-2.5"
       >
         <img
           src={getProductImage(product)}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-xl"
+          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 rounded-lg"
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
