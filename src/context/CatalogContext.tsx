@@ -230,7 +230,26 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
             console.error('Error seeding initial products to Firestore:', e);
           }
         } else {
-          const loadedProducts = snapshot.docs.map((doc) => doc.data() as Product);
+          const loadedProducts = snapshot.docs.map((doc) => {
+            const data = doc.data() as any;
+            const rawP = data.price;
+            const rawD = data.discountPrice;
+            const parsedPrice = rawP !== undefined && rawP !== null && String(rawP).trim() !== ''
+              ? (typeof rawP === 'string' ? parseFloat(rawP.replace(',', '.')) : Number(rawP))
+              : null;
+            const parsedDisc = rawD !== undefined && rawD !== null && String(rawD).trim() !== ''
+              ? (typeof rawD === 'string' ? parseFloat(rawD.replace(',', '.')) : Number(rawD))
+              : null;
+
+            return {
+              ...data,
+              id: doc.id || data.id,
+              showPrice: data.showPrice !== false, // default true unless explicitly set to false
+              price: parsedPrice !== null && !isNaN(parsedPrice) ? parsedPrice : null,
+              discountPrice: parsedDisc !== null && !isNaN(parsedDisc) ? parsedDisc : null,
+              vatRate: data.vatRate ?? data.taxRate ?? 20,
+            } as Product;
+          });
           loadedProducts.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
           setProducts(loadedProducts);
         }
@@ -309,13 +328,19 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         } else {
           const remoteSettings = docSnap.data() as GeneralSettings;
+          const mergedSettings: GeneralSettings = {
+            ...DEFAULT_SETTINGS,
+            ...remoteSettings,
+            globalShowPrice: remoteSettings.globalShowPrice !== undefined ? remoteSettings.globalShowPrice : true,
+          };
+
           if (
             remoteSettings.siteName?.includes('SCUCS') ||
             remoteSettings.brandName?.includes('SCUCS') ||
             !remoteSettings.brandName
           ) {
             const updatedSettings: GeneralSettings = {
-              ...remoteSettings,
+              ...mergedSettings,
               siteName: 'CRS Spor Antrenman Malzemeleri',
               brandName: 'CRS Spor Antrenman Malzemeleri',
               logoText: remoteSettings.logoText === 'SCUCS' ? 'CRS SPOR' : (remoteSettings.logoText || 'CRS SPOR'),
@@ -328,7 +353,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
               console.error('Error auto-migrating settings:', err);
             }
           } else {
-            setSettings(remoteSettings);
+            setSettings(mergedSettings);
           }
         }
       },

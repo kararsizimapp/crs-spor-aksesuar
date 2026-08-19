@@ -12,12 +12,17 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { setSelectedProductDetail, settings, addToCart } = useCatalog();
 
-  const isPriceVisible = settings.globalShowPrice && product.showPrice;
-  const priceDisplay = formatPrice(product.price, product.currency, isPriceVisible);
-  const isQuoteOnly = !product.price || !isPriceVisible;
+  const isPriceVisible = (settings.globalShowPrice !== false) && (product.showPrice !== false);
+  const rawPrice = product.price !== undefined && product.price !== null && String(product.price).trim() !== ''
+    ? (typeof product.price === 'string' ? parseFloat(product.price.replace(',', '.')) : Number(product.price))
+    : null;
+  const hasPrice = rawPrice !== null && !isNaN(rawPrice) && rawPrice > 0;
 
-  const vatPercent = product.vatRate ?? product.taxRate ?? 20;
-  const taxPrices = calculateTaxPrices(product.price, product.taxStatus, vatPercent);
+  const priceDisplay = formatPrice(rawPrice, product.currency, isPriceVisible);
+  const isQuoteOnly = !hasPrice || !isPriceVisible;
+
+  const vatPercent = product.vatRate !== undefined && !isNaN(product.vatRate) ? product.vatRate : (product.taxRate ?? 20);
+  const taxPrices = calculateTaxPrices(rawPrice, product.taxStatus, vatPercent);
   const exVatPriceStr = formatPrice(taxPrices.exVat, product.currency, isPriceVisible);
   const incVatPriceStr = formatPrice(taxPrices.incVat, product.currency, isPriceVisible);
 

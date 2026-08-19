@@ -2,43 +2,58 @@
  * Utility functions for formatting prices, dates, slugs, and WhatsApp links
  */
 
-export function formatPrice(price?: number | null, currency: string = 'TRY', showPrice: boolean = true): string {
-  if (!showPrice || price === null || price === undefined || isNaN(price)) {
+export function formatPrice(
+  price?: number | string | null,
+  currency: string = 'TRY',
+  showPrice: boolean = true
+): string {
+  if (showPrice === false || price === null || price === undefined || price === '') {
+    return 'Fiyat için iletişime geçiniz';
+  }
+
+  const numericPrice = typeof price === 'string' ? parseFloat(price.replace(',', '.')) : Number(price);
+  if (isNaN(numericPrice)) {
     return 'Fiyat için iletişime geçiniz';
   }
 
   const formatted = new Intl.NumberFormat('tr-TR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(price);
+  }).format(numericPrice);
 
-  const symbol = currency === 'TRY' ? '₺' : currency;
+  const symbol = currency === 'TRY' ? '₺' : (currency === 'USD' ? '$' : (currency === 'EUR' ? '€' : currency));
   return `${formatted} ${symbol}`;
 }
 
-export function formatCurrency(amount: number, currency: string = 'TRY'): string {
+export function formatCurrency(amount: number | string, currency: string = 'TRY'): string {
   return formatPrice(amount, currency, true);
 }
 
 export function calculateTaxPrices(
-  price?: number | null,
+  price?: number | string | null,
   taxStatus: 'KDV Dahil' | 'KDV Hariç' = 'KDV Hariç',
   vatRate: number = 20
 ) {
-  if (price === null || price === undefined || isNaN(price)) {
+  if (price === null || price === undefined || price === '') {
     return { exVat: null, incVat: null, vatRate };
   }
+
+  const numericPrice = typeof price === 'string' ? parseFloat(price.replace(',', '.')) : Number(price);
+  if (isNaN(numericPrice)) {
+    return { exVat: null, incVat: null, vatRate };
+  }
+
   const effectiveRate = vatRate !== undefined && !isNaN(vatRate) ? vatRate : 20;
   const rateDecimal = effectiveRate / 100;
   let exVat: number;
   let incVat: number;
 
   if (taxStatus === 'KDV Dahil') {
-    incVat = price;
-    exVat = price / (1 + rateDecimal);
+    incVat = numericPrice;
+    exVat = numericPrice / (1 + rateDecimal);
   } else {
-    exVat = price;
-    incVat = price * (1 + rateDecimal);
+    exVat = numericPrice;
+    incVat = numericPrice * (1 + rateDecimal);
   }
 
   return { exVat, incVat, vatRate: effectiveRate };

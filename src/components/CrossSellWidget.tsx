@@ -19,7 +19,7 @@ export const CrossSellWidget: React.FC<CrossSellWidgetProps> = ({
 
   if (!currentProduct) return null;
 
-  const isPriceVisible = settings.globalShowPrice && currentProduct.showPrice;
+  const isGlobalPriceVisible = settings.globalShowPrice !== false;
 
   // Filter cross-sell candidate products
   // 1. Same category / subcategory
@@ -65,7 +65,8 @@ export const CrossSellWidget: React.FC<CrossSellWidgetProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {finalRecommendations.map((prod) => {
           const img = getProductImage(prod);
-          const priceDisplay = formatPrice(prod.price, prod.currency, isPriceVisible);
+          const itemPriceVisible = isGlobalPriceVisible && (prod.showPrice !== false);
+          const priceDisplay = formatPrice(prod.price, prod.currency, itemPriceVisible);
 
           return (
             <div

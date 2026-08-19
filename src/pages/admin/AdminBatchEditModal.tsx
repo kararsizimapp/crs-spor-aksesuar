@@ -67,6 +67,7 @@ export const AdminBatchEditModal: React.FC<AdminBatchEditModalProps> = ({
         price: p.price,
         discountPrice: p.discountPrice,
         priceType: p.priceType || 'Tek Fiyatı',
+        showPrice: p.showPrice !== false,
         taxStatus: p.taxStatus || 'KDV Dahil',
         vatRate: p.vatRate || p.taxRate || 20,
         stockStatus: p.stockStatus || 'Stokta Var',

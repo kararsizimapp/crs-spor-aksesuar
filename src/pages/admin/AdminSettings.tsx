@@ -19,6 +19,7 @@ export const AdminSettings: React.FC = () => {
   const [homeBannerImage, setHomeBannerImage] = useState(settings.homeBannerImage);
   const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl || '/favicon.svg');
   const [aboutText, setAboutText] = useState(settings.aboutText);
+  const [globalShowPrice, setGlobalShowPrice] = useState<boolean>(settings.globalShowPrice !== false);
 
   // Promo Banners State
   const [banners, setBanners] = useState<HomeBanner[]>(
@@ -172,8 +173,9 @@ export const AdminSettings: React.FC = () => {
       faviconUrl,
       promoBanners: banners,
       aboutText,
+      globalShowPrice,
     });
-    showNotification('Sistem ayarları, favicon ve slider bannerları başarıyla güncellendi.');
+    showNotification('Sistem ayarları ve fiyat görünürlük kuralları başarıyla kaydedildi.');
   };
 
   const handleResetData = () => {
@@ -225,6 +227,25 @@ export const AdminSettings: React.FC = () => {
                 <option value="EUR">Euro (€)</option>
               </select>
             </div>
+          </div>
+
+          {/* Global Price Display Option */}
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between">
+            <div>
+              <div className="font-bold text-slate-900 text-xs">Sitede Ürün Fiyatlarını Göster (Genel Fiyat Modu)</div>
+              <p className="text-[11px] text-slate-500">
+                Açık olduğunda fiyatı girilmiş ürünlerin KDV Hariç ve KDV Dahil fiyatları sitede görüntülenir.
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={globalShowPrice}
+                onChange={e => setGlobalShowPrice(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+            </label>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -59,6 +59,7 @@ export const AdminQuickEditModal: React.FC<AdminQuickEditModalProps> = ({
   const [subcategoryId, setSubcategoryId] = useState('');
   const [price, setPrice] = useState<string>('');
   const [discountPrice, setDiscountPrice] = useState<string>('');
+  const [showPrice, setShowPrice] = useState<boolean>(true);
   const [taxStatus, setTaxStatus] = useState<'KDV Dahil' | 'KDV Hariç'>('KDV Dahil');
   const [vatRate, setVatRate] = useState<number>(20);
   const [shortDescription, setShortDescription] = useState('');
@@ -77,6 +78,7 @@ export const AdminQuickEditModal: React.FC<AdminQuickEditModalProps> = ({
       setSubcategoryId(currentProduct.subcategoryId || '');
       setPrice(currentProduct.price !== undefined && currentProduct.price !== null ? String(currentProduct.price) : '');
       setDiscountPrice(currentProduct.discountPrice !== undefined && currentProduct.discountPrice !== null ? String(currentProduct.discountPrice) : '');
+      setShowPrice(currentProduct.showPrice !== false);
       setTaxStatus(currentProduct.taxStatus || 'KDV Dahil');
       setVatRate(currentProduct.vatRate || currentProduct.taxRate || 20);
       setShortDescription(currentProduct.shortDescription || '');
@@ -142,6 +144,7 @@ export const AdminQuickEditModal: React.FC<AdminQuickEditModalProps> = ({
         subcategoryId: subcategoryId || undefined,
         price: parsedPrice && !isNaN(parsedPrice) ? parsedPrice : null,
         discountPrice: parsedDiscountPrice && !isNaN(parsedDiscountPrice) ? parsedDiscountPrice : null,
+        showPrice: showPrice,
         taxStatus,
         vatRate,
         taxRate: vatRate,
@@ -459,6 +462,24 @@ export const AdminQuickEditModal: React.FC<AdminQuickEditModalProps> = ({
                     Satış fiyatı girdiğinizde sitede eski fiyatın üstü çizili gösterilir.
                   </p>
                 </div>
+              </div>
+
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-slate-900 text-xs">Fiyat Sitede Gösterilsin</div>
+                  <p className="text-[11px] text-slate-500">
+                    Kapalı tutulursa sitede &quot;Fiyat için iletişime geçiniz&quot; görünür.
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showPrice}
+                    onChange={e => setShowPrice(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
               </div>
             </div>
           )}

@@ -14,6 +14,7 @@ import {
 
 export const ProductDetailModal: React.FC = () => {
   const {
+    products,
     selectedProductDetail,
     setSelectedProductDetail,
     setLightboxImage,
@@ -29,8 +30,9 @@ export const ProductDetailModal: React.FC = () => {
 
   if (!selectedProductDetail) return null;
 
-  const product = selectedProductDetail;
-  const isPriceVisible = settings.globalShowPrice && product.showPrice;
+  // Resolve live product state from context if available
+  const product = products.find(p => p.id === selectedProductDetail.id) || selectedProductDetail;
+  const isPriceVisible = (settings.globalShowPrice !== false) && (product.showPrice !== false);
 
   const categoryObj = categories.find(c => c.id === product.categoryId);
   const subcategoryObj = categoryObj?.subcategories?.find(s => s.id === product.subcategoryId);
@@ -59,9 +61,16 @@ export const ProductDetailModal: React.FC = () => {
     }
   };
 
-  // Tax calculations
-  const effectiveVatRate = product.vatRate !== undefined && !isNaN(product.vatRate) ? product.vatRate : 20;
-  const taxInfo = calculateTaxPrices(product.price, product.taxStatus, effectiveVatRate);
+  // Price & Tax calculations
+  const rawPrice = product.price !== undefined && product.price !== null && String(product.price).trim() !== ''
+    ? (typeof product.price === 'string' ? parseFloat(product.price.replace(',', '.')) : Number(product.price))
+    : null;
+  const hasPrice = rawPrice !== null && !isNaN(rawPrice) && rawPrice > 0;
+
+  const effectiveVatRate = product.vatRate !== undefined && !isNaN(product.vatRate)
+    ? product.vatRate
+    : (product.taxRate ?? 20);
+  const taxInfo = calculateTaxPrices(rawPrice, product.taxStatus, effectiveVatRate);
 
   const exVatText = taxInfo.exVat !== null ? formatPrice(taxInfo.exVat, product.currency, isPriceVisible) : '—';
   const incVatText = taxInfo.incVat !== null ? formatPrice(taxInfo.incVat, product.currency, isPriceVisible) : '—';
@@ -168,7 +177,7 @@ export const ProductDetailModal: React.FC = () => {
                   </span>
                 </div>
 
-                {product.price && isPriceVisible ? (
+                {hasPrice && isPriceVisible ? (
                   <div className="grid grid-cols-2 gap-2.5 pt-1 border-t border-slate-800/80">
                     {/* KDV Hariç Fiyat */}
                     <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
